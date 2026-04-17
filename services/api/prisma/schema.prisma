@@ -97,3 +97,15 @@ model RunTrace {
 
   @@index([taskId])
 }
+
+model BenchResult {
+  id         String   @id @default(uuid())
+  category   String
+  model      String
+  taskId     String
+  score      Float
+  durationMs Int
+  output     String?
+  createdAt  DateTime @default(now())
+  @@index([category, model])
+}

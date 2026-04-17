@@ -2,6 +2,15 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { prisma } from "../index.js";
 
+const KNOWN_MODELS = [
+  "claude-opus-4-7",
+  "claude-sonnet-4-6",
+  "gpt-4o",
+  "gpt-4o-mini",
+  "gemini-2.0-flash",
+  "gemini-1.5-pro",
+];
+
 const CreateAgentSchema = z.object({
   projectId: z.string().min(1),
   name: z.string().min(1).max(255),
@@ -19,15 +28,25 @@ const UpdateAgentSchema = z.object({
   cliArgs: z.array(z.string()).optional(),
 });
 
+const ListQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  cursor: z.string().optional(),
+});
+
 export async function agentsRoutes(app: FastifyInstance): Promise<void> {
   app.get<{ Params: { id: string } }>("/v1/projects/:id/agents", async (req, reply) => {
     const project = await prisma.project.findFirst({
       where: { id: req.params.id, userId: req.userId! },
     });
     if (!project) return reply.code(404).send({ error: "project not found" });
+
+    const q = ListQuerySchema.parse(req.query);
+    const limit = Math.min(q.limit, 100);
     const agents = await prisma.agent.findMany({
       where: { projectId: project.id },
       orderBy: { createdAt: "asc" },
+      take: limit,
+      ...(q.cursor ? { cursor: { id: q.cursor }, skip: 1 } : {}),
     });
     return agents.map(shape);
   });
@@ -52,10 +71,14 @@ export async function agentsRoutes(app: FastifyInstance): Promise<void> {
         systemPrompt: parsed.data.systemPrompt,
         model: parsed.data.model,
         cliBinary: parsed.data.cliBinary,
-        cliArgs: parsed.data.cliArgs ? JSON.stringify(parsed.data.cliArgs) : null,
+        cliArgs: JSON.stringify(parsed.data.cliArgs ?? []),
       },
     });
-    return shape(agent);
+    const out = shape(agent);
+    if (!KNOWN_MODELS.includes(agent.model)) {
+      return { ...out, _warning: "unknown model" };
+    }
+    return out;
   });
 
   app.patch<{ Params: { id: string } }>("/v1/agents/:id", async (req, reply) => {
@@ -70,10 +93,14 @@ export async function agentsRoutes(app: FastifyInstance): Promise<void> {
         systemPrompt: parsed.data.systemPrompt,
         model: parsed.data.model,
         cliBinary: parsed.data.cliBinary,
-        cliArgs: parsed.data.cliArgs ? JSON.stringify(parsed.data.cliArgs) : undefined,
+        cliArgs: parsed.data.cliArgs !== undefined ? JSON.stringify(parsed.data.cliArgs) : undefined,
       },
     });
-    return shape(agent);
+    const out = shape(agent);
+    if (agent.model && !KNOWN_MODELS.includes(agent.model)) {
+      return { ...out, _warning: "unknown model" };
+    }
+    return out;
   });
 
   app.delete<{ Params: { id: string } }>("/v1/agents/:id", async (req, reply) => {
@@ -104,6 +131,6 @@ function shape(a: {
     systemPrompt: a.systemPrompt,
     model: a.model,
     cliBinary: a.cliBinary,
-    cliArgs: a.cliArgs ? (JSON.parse(a.cliArgs) as string[]) : undefined,
+    cliArgs: JSON.parse(a.cliArgs ?? "[]") as string[],
   };
 }
