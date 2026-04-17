@@ -5,8 +5,8 @@ Strike each line when the file is committed.
 ## Tier 1 — contract (blocks everything downstream)
 ~~1.  spec/openapi.yaml~~
 ~~2.  services/api/prisma/schema.prisma~~
-3.  packages/sdk-ts/src/index.ts
-4.  packages/sdk-rust/src/lib.rs
+~~3.  packages/sdk-ts/src/index.ts~~
+~~4.  packages/sdk-rust/src/lib.rs~~
 
 ## Tier 2 — backend + MCP (unblocks desktop, cli, bench)
 ~~5.  services/api/src/index.ts~~
@@ -19,7 +19,7 @@ Strike each line when the file is committed.
 ~~12. services/mcp/src/server.ts~~
 ~~13. services/mcp/src/tools.ts~~
 ~~14. services/mcp/src/ui_tools.ts~~
-15. services/mcp/src/auth.ts
+~~15. services/mcp/src/auth.ts~~
 
 ## Tier 3 — desktop core (Rust)
 ~~16. apps/desktop/src-tauri/Cargo.toml~~
@@ -37,7 +37,7 @@ Strike each line when the file is committed.
 ~~26. apps/desktop/src/state/agents.ts~~
 ~~27. apps/desktop/src/state/swarms.ts~~
 ~~28. apps/desktop/src/state/theme.ts~~
-29. apps/desktop/src/state/auth.ts
+~~29. apps/desktop/src/state/auth.ts~~
 ~~30. apps/desktop/src/lib/api.ts~~
 ~~31. apps/desktop/src/lib/ipc.ts~~
 ~~32. apps/desktop/src/lib/auth.ts~~
@@ -48,7 +48,7 @@ Strike each line when the file is committed.
 ~~37. apps/desktop/src/components/EditorPane.tsx~~
 ~~38. apps/desktop/src/components/Grid.tsx~~
 ~~39. apps/desktop/src/components/Kanban.tsx~~
-40. apps/desktop/src/components/Agents.tsx
+~~40. apps/desktop/src/components/Agents.tsx~~
 ~~41. apps/desktop/src/components/PromptLibrary.tsx~~
 ~~42. apps/desktop/src/components/Mailbox.tsx~~
 ~~43. apps/desktop/src/components/FileTree.tsx~~
@@ -58,7 +58,7 @@ Strike each line when the file is committed.
 ~~47. apps/desktop/src/components/Sidebar.tsx~~
 ~~48. apps/desktop/src/App.tsx~~
 ~~49. apps/desktop/src/main.tsx~~
-50. apps/desktop/src/themes/_schema.json
+~~50. apps/desktop/src/themes/_schema.json~~
 ~~51. apps/desktop/src/themes/void.json~~
 ~~52. apps/desktop/src/themes/forge.json~~
 ~~53. apps/desktop/src/themes/neon-tokyo.json~~
@@ -98,7 +98,7 @@ Strike each line when the file is committed.
 ~~85. apps/cli/src/providers/vllm.ts~~
 ~~86. apps/voice/src-tauri/src/whisper_sidecar.rs~~
 ~~87. apps/voice/src-tauri/src/inject.rs~~
-88. apps/voice/src-tauri/src/main.rs
+~~88. apps/voice/src-tauri/src/main.rs~~
 ~~89. apps/voice/src/App.tsx~~
 ~~90. apps/bench/runner/harness.py~~
 ~~91. apps/bench/runner/categories/algo.py~~
@@ -107,14 +107,14 @@ Strike each line when the file is committed.
 ~~94. apps/bench/runner/categories/reason.py~~
 ~~95. apps/bench/runner/categories/sec.py~~
 ~~96. apps/bench/runner/categories/ui.py~~
-97. apps/bench/runner/docker/sandbox.Dockerfile
+~~97. apps/bench/runner/docker/sandbox.Dockerfile~~
 
 ## Tier 6 — packages + infra
-98. packages/theme-kit/src/validate.ts
+~~98. packages/theme-kit/src/validate.ts~~
 ~~99. packages/plugin-host/src/lib.rs~~
 ~~100. packages/replay-player/src/index.ts~~
 ~~101. infra/docker-compose.yml~~
-102. infra/migrations/001_init.sql
+~~102. infra/migrations/001_init.sql~~
 ~~103. .github/workflows/release.yml~~
 ~~104. .github/workflows/ci.yml~~
 ~~105. apps/bench/web/leaderboard.tsx~~
