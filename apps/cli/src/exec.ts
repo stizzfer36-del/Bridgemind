@@ -62,7 +62,7 @@ async function apiPost<T>(token: string, path: string, body: unknown): Promise<T
 export async function exec(
   providers: Record<string, Provider>,
   taskId: string,
-  flags: Record<string, string | boolean> & { positional: string[] } = { positional: [] }
+  flags: { positional: string[]; [key: string]: string | boolean | string[] } = { positional: [] as string[] }
 ): Promise<void> {
   const token = await getToken();
 
