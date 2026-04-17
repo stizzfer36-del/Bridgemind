@@ -14,7 +14,7 @@ use serde::Serialize;
 pub enum BlockEvent {
     PromptStart { ts: i64 },
     PromptEnd { ts: i64 },
-    CommandStart { ts: i64 },
+    CommandStart { ts: i64, command_text: Option<String> },
     CommandFinished { exit_code: Option<i32>, ts: i64 },
 }
 
@@ -115,13 +115,23 @@ fn emit_if_133(buf: &[u8], out: &mut Vec<BlockEvent>) {
         Some(k) => k,
         None => return,
     };
+    // Collect remaining params after the kind field
+    let remaining: Vec<&str> = parts.collect();
     let ts = now_ms();
     let ev = match kind {
         "A" => BlockEvent::PromptStart { ts },
         "B" => BlockEvent::PromptEnd { ts },
-        "C" => BlockEvent::CommandStart { ts },
+        "C" => {
+            // Some shells send ESC]133;C;command_text ST
+            let command_text = if remaining.is_empty() {
+                None
+            } else {
+                Some(remaining.join(";"))
+            };
+            BlockEvent::CommandStart { ts, command_text }
+        }
         "D" => {
-            let exit = parts.next().and_then(|p| p.parse::<i32>().ok());
+            let exit = remaining.first().and_then(|p| p.parse::<i32>().ok());
             BlockEvent::CommandFinished {
                 exit_code: exit,
                 ts,
@@ -154,6 +164,25 @@ mod tests {
                 ..
             })
         ));
+    }
+
+    #[test]
+    fn parses_command_start_with_text() {
+        let mut p = Osc133Parser::new();
+        let ev = p.feed(b"\x1b]133;C;echo hello\x07");
+        match ev.first() {
+            Some(BlockEvent::CommandStart { command_text: Some(t), .. }) => {
+                assert_eq!(t, "echo hello");
+            }
+            other => panic!("unexpected: {:?}", other),
+        }
+    }
+
+    #[test]
+    fn parses_command_start_no_text() {
+        let mut p = Osc133Parser::new();
+        let ev = p.feed(b"\x1b]133;C\x07");
+        assert!(matches!(ev.first(), Some(BlockEvent::CommandStart { command_text: None, .. })));
     }
 
     #[test]

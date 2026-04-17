@@ -1,46 +1,59 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-const SECRET = process.env.JWT_SECRET ?? "dev-secret-change-me";
+const ISS = "forge-api";
+const AUD = "forge-client";
 
-/**
- * Minimal HS256 JWT verify. Production would use @fastify/jwt with RS256 + a
- * real OAuth issuer; this keeps the service dependency-light for local dev.
- */
-export async function verifyJwt(token: string): Promise<{ sub: string; exp: number }> {
+function getSecrets(): string[] {
+  return (process.env.JWT_SECRET ?? "dev-secret").split(",").map(s => s.trim()).filter(Boolean);
+}
+
+function b64url(s: string): string {
+  return Buffer.from(s).toString("base64url");
+}
+
+function sign(header: string, payload: string, secret: string): string {
+  return createHmac("sha256", secret).update(`${header}.${payload}`).digest("base64url");
+}
+
+export type JwtPayload = { sub: string; iat: number; exp: number; nbf?: number; iss?: string; aud?: string };
+
+export function signJwt(sub: string, expiresInSeconds = 86400): string {
+  const now = Math.floor(Date.now() / 1000);
+  const payload: JwtPayload = { sub, iat: now, exp: now + expiresInSeconds, iss: ISS, aud: AUD };
+  const h = b64url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+  const p = b64url(JSON.stringify(payload));
+  const [first] = getSecrets();
+  return `${h}.${p}.${sign(h, p, first)}`;
+}
+
+export function verifyJwt(token: string): JwtPayload {
   const parts = token.split(".");
-  if (parts.length !== 3) throw new Error("bad jwt");
-  const [h, p, s] = parts;
-  const expected = sign(`${h}.${p}`);
-  if (!timingSafeEqual(b64urlDecode(s), b64urlDecode(expected))) {
-    throw new Error("bad signature");
+  if (parts.length !== 3) throw new Error("malformed jwt");
+  const [h, p, sig] = parts;
+  const secrets = getSecrets();
+  let payload: JwtPayload;
+  try {
+    payload = JSON.parse(Buffer.from(p, "base64url").toString());
+  } catch {
+    throw new Error("malformed payload");
   }
-  const payload = JSON.parse(b64urlDecode(p).toString("utf8")) as {
-    sub?: string;
-    exp?: number;
-  };
-  if (!payload.sub) throw new Error("no sub");
-  if (payload.exp && Date.now() / 1000 > payload.exp) throw new Error("expired");
-  return { sub: payload.sub, exp: payload.exp ?? 0 };
-}
-
-export function signJwt(sub: string, ttlSec = 900): string {
-  const header = { alg: "HS256", typ: "JWT" };
-  const payload = { sub, iat: Math.floor(Date.now() / 1000), exp: Math.floor(Date.now() / 1000) + ttlSec };
-  const h = b64urlEncode(Buffer.from(JSON.stringify(header)));
-  const p = b64urlEncode(Buffer.from(JSON.stringify(payload)));
-  const s = sign(`${h}.${p}`);
-  return `${h}.${p}.${s}`;
-}
-
-function sign(input: string): string {
-  return b64urlEncode(createHmac("sha256", SECRET).update(input).digest());
-}
-
-function b64urlEncode(b: Buffer): string {
-  return b.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-
-function b64urlDecode(s: string): Buffer {
-  const pad = s.length % 4 === 0 ? "" : "=".repeat(4 - (s.length % 4));
-  return Buffer.from(s.replace(/-/g, "+").replace(/_/g, "/") + pad, "base64");
+  const now = Math.floor(Date.now() / 1000);
+  let valid = false;
+  for (const secret of secrets) {
+    const expected = sign(h, p, secret);
+    try {
+      if (timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) {
+        valid = true;
+        break;
+      }
+    } catch {
+      /* length mismatch */
+    }
+  }
+  if (!valid) throw new Error("invalid signature");
+  if (payload.exp < now) throw new Error("token expired");
+  if (payload.nbf !== undefined && payload.nbf > now) throw new Error("token not yet valid");
+  if (payload.iss && payload.iss !== ISS) throw new Error("invalid issuer");
+  if (payload.aud && payload.aud !== AUD) throw new Error("invalid audience");
+  return payload;
 }

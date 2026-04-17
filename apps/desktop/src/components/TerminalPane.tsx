@@ -17,6 +17,14 @@ import {
 import CommandBlock, { type Block } from "./CommandBlock";
 import { useWorkspace } from "../state/workspace";
 
+function getThemeFromCss(el: HTMLElement) {
+  const styles = getComputedStyle(el);
+  const bg = styles.getPropertyValue("--bg").trim() || "#0b0d10";
+  const fg = styles.getPropertyValue("--fg").trim() || "#d7e0ea";
+  const accent = styles.getPropertyValue("--accent").trim() || "#7aa2f7";
+  return { background: bg, foreground: fg, cursor: accent };
+}
+
 export default function TerminalPane({
   paneId,
   cwd,
@@ -27,18 +35,22 @@ export default function TerminalPane({
   const ref = useRef<HTMLDivElement>(null);
   const termRef = useRef<Terminal | null>(null);
   const fitRef = useRef<FitAddon | null>(null);
+  const searchRef = useRef<SearchAddon | null>(null);
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [loading, setLoading] = useState(true);
   const [exitCode, setExitCode] = useState<number | null>(null);
+  const [showExitBanner, setShowExitBanner] = useState(false);
+  const [spawnArgs, setSpawnArgs] = useState<{ workspaceId: string; paneId: string; cwd?: string } | null>(null);
   const workspaceId = useWorkspace((s) => s.activeTabId);
 
   useEffect(() => {
     if (!ref.current) return;
+    const theme = getThemeFromCss(ref.current);
     const term = new Terminal({
       fontFamily: 'ui-monospace, "JetBrains Mono", "Fira Code", Menlo, monospace',
       fontSize: 13,
       cursorBlink: true,
-      theme: { background: "rgba(0,0,0,0)" },
+      theme: { background: theme.background, foreground: theme.foreground, cursor: theme.cursor },
       allowTransparency: true,
       scrollback: 5000,
     });
@@ -56,6 +68,7 @@ export default function TerminalPane({
 
     termRef.current = term;
     fitRef.current = fit;
+    searchRef.current = search;
 
     const unsubscribers: Promise<() => void>[] = [];
 
@@ -69,7 +82,10 @@ export default function TerminalPane({
       onBlockEvent(paneId, (ev) => handleBlockEvent(ev, setBlocks))
     );
     unsubscribers.push(
-      onPtyExit(paneId, (ev) => setExitCode(ev.code))
+      onPtyExit(paneId, (ev) => {
+        setExitCode(ev.code);
+        setShowExitBanner(true);
+      })
     );
 
     term.onData((data) => {
@@ -83,22 +99,19 @@ export default function TerminalPane({
     });
     ro.observe(ref.current);
 
-    void spawnPane({
-      workspaceId,
-      paneId,
-      cwd,
-      cols: term.cols,
-      rows: term.rows,
-    }).then(() => setLoading(false));
+    const args = { workspaceId, paneId, cwd };
+    setSpawnArgs(args);
+    void spawnPane({ ...args, cols: term.cols, rows: term.rows }).then(() =>
+      setLoading(false)
+    );
 
     const onSearch = () => {
-      const q = window.prompt("Search");
-      if (q) search.findNext(q);
+      search.findNext("");
     };
-    window.addEventListener("bs:search", onSearch);
+    document.addEventListener("forge:search", onSearch);
 
     return () => {
-      window.removeEventListener("bs:search", onSearch);
+      document.removeEventListener("forge:search", onSearch);
       ro.disconnect();
       void killPane(paneId);
       term.dispose();
@@ -107,11 +120,26 @@ export default function TerminalPane({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paneId]);
 
+  async function handleReconnect() {
+    if (!spawnArgs) return;
+    setShowExitBanner(false);
+    setExitCode(null);
+    termRef.current?.clear();
+    await spawnPane({
+      ...spawnArgs,
+      cols: termRef.current?.cols,
+      rows: termRef.current?.rows,
+    });
+  }
+
   return (
-    <div className="terminal-pane">
+    <div className="terminal-pane" aria-label="Terminal pane">
       {loading && <div className="spinner">loading…</div>}
-      {exitCode !== null && exitCode !== 0 && (
-        <div className="banner error">Shell exited with code {exitCode}</div>
+      {showExitBanner && (
+        <div className="banner error" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          PTY exited (code {exitCode ?? "?"}) —{" "}
+          <button onClick={() => void handleReconnect()}>Reconnect</button>
+        </div>
       )}
       <div className="term" ref={ref} />
       <div className="blocks">

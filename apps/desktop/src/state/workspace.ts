@@ -74,6 +74,10 @@ type WorkspaceState = {
   setSidebarView: (v: WorkspaceState["sidebarView"]) => void;
   toggleQuickOpen: () => void;
   setProjectPath: (projectId: string, path: string) => void;
+  moveTab: (fromIndex: number, toIndex: number) => void;
+  renameTab: (tabId: string, title: string) => void;
+  showToast?: (message: string) => void;
+  activeProjectName?: string;
 };
 
 function freshTab(template: GridTemplate): Tab {
@@ -183,6 +187,23 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
 
   setProjectPath: (projectId, path) => {
     set((s) => ({ projectPaths: { ...s.projectPaths, [projectId]: path } }));
+    persist(get());
+  },
+
+  moveTab: (fromIndex, toIndex) => {
+    set((s) => {
+      const tabs = [...s.tabs];
+      const [removed] = tabs.splice(fromIndex, 1);
+      tabs.splice(toIndex, 0, removed);
+      return { tabs };
+    });
+    persist(get());
+  },
+
+  renameTab: (tabId, title) => {
+    set((s) => ({
+      tabs: s.tabs.map((t) => (t.id === tabId ? { ...t, title } : t)),
+    }));
     persist(get());
   },
 }));

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { listen } from "@tauri-apps/api/event";
-import { openUrl } from "@tauri-apps/plugin-shell";
+import { open as openUrl } from "@tauri-apps/plugin-shell";
 import { invoke } from "@tauri-apps/api/core";
 import { loadStore, saveStore } from "./persist";
 
@@ -10,15 +10,23 @@ const OAUTH_AUTHORIZE_URL =
 const OAUTH_CLIENT_ID =
   (import.meta.env.VITE_OAUTH_CLIENT_ID as string | undefined) ??
   "forge-desktop";
+const OAUTH_REFRESH_URL =
+  (import.meta.env.VITE_OAUTH_REFRESH_URL as string | undefined) ??
+  "https://auth.forge.sh/oauth/refresh";
+const API_URL =
+  (import.meta.env.VITE_FORGE_API_URL as string | undefined) ??
+  "https://api.forge.sh";
 const REDIRECT_URI = "forge://auth";
 
 type AuthState = {
   apiKey: string | null;
   signing: boolean;
+  pkceVerifier: string | null;
   init: () => Promise<void>;
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
   setApiKey: (key: string) => Promise<void>;
+  refreshToken: () => Promise<void>;
 };
 
 function base64url(bytes: Uint8Array): string {
@@ -34,12 +42,14 @@ async function pkce() {
     new TextEncoder().encode(verifier)
   );
   const challenge = base64url(new Uint8Array(hash));
+  useAuth.setState({ pkceVerifier: verifier });
   return { verifier, challenge };
 }
 
-export const useAuth = create<AuthState>((set) => ({
+export const useAuth = create<AuthState>((set, get) => ({
   apiKey: null,
   signing: false,
+  pkceVerifier: null,
 
   init: async () => {
     const key = (await loadStore("auth.apiKey")) as string | null;
@@ -74,13 +84,50 @@ export const useAuth = create<AuthState>((set) => ({
   },
 
   signOut: async () => {
+    const { apiKey } = get();
+    if (apiKey && apiKey.startsWith("forge_live_")) {
+      // Extract key ID — format: forge_live_<id>_<secret>
+      const parts = apiKey.split("_");
+      const keyId = parts.length >= 3 ? parts[2] : apiKey;
+      try {
+        await fetch(`${API_URL}/v1/keys/${keyId}`, {
+          method: "DELETE",
+          headers: { authorization: `Bearer ${apiKey}` },
+        });
+      } catch {
+        // best-effort deletion
+      }
+    }
     await saveStore("auth.apiKey", null);
-    set({ apiKey: null });
+    set({ apiKey: null, pkceVerifier: null });
   },
 
   setApiKey: async (key) => {
     await saveStore("auth.apiKey", key);
     set({ apiKey: key });
+  },
+
+  refreshToken: async () => {
+    const { apiKey } = get();
+    if (!apiKey) return;
+    try {
+      const res = await fetch(OAUTH_REFRESH_URL, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({ token: apiKey }),
+      });
+      if (!res.ok) throw new Error(`refresh failed: ${res.status}`);
+      const data = (await res.json()) as { token: string };
+      if (data.token) {
+        await saveStore("auth.apiKey", data.token);
+        set({ apiKey: data.token });
+      }
+    } catch {
+      await get().signOut();
+    }
   },
 }));
 

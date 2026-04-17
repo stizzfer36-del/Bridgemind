@@ -44,13 +44,21 @@ function buildServer(apiKey: string): McpServer {
   for (const [name, def] of Object.entries(dataTools)) {
     server.registerTool(
       name,
-      { description: def.description, inputSchema: def.input.shape as never },
-      async (args: unknown) => {
-        const result = await def.run(client)(args as never);
-        return {
-          content: [{ type: "text", text: JSON.stringify(result ?? null, null, 2) }],
-        };
-      }
+      { description: def.description, inputSchema: def.input.shape as any },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (async (args: unknown) => {
+        try {
+          const result = await def.run(client)(args as never);
+          return {
+            content: [{ type: "text" as const, text: JSON.stringify(result ?? null, null, 2) }],
+          };
+        } catch (err) {
+          return {
+            content: [{ type: "text" as const, text: "Error: " + (err as Error).message }],
+            isError: true,
+          };
+        }
+      }) as any
     );
   }
 
@@ -58,13 +66,21 @@ function buildServer(apiKey: string): McpServer {
   for (const [name, def] of Object.entries(uiTools)) {
     server.registerTool(
       name,
-      { description: def.description, inputSchema: def.input.shape as never },
-      async (args: unknown) => {
-        const result = await forwardToUi(apiKey, name, args);
-        return {
-          content: [{ type: "text", text: JSON.stringify(result ?? null, null, 2) }],
-        };
-      }
+      { description: def.description, inputSchema: def.input.shape as any },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (async (args: unknown) => {
+        try {
+          const result = await forwardToUi(apiKey, name, args);
+          return {
+            content: [{ type: "text" as const, text: JSON.stringify(result ?? null, null, 2) }],
+          };
+        } catch (err) {
+          return {
+            content: [{ type: "text" as const, text: "Error: " + (err as Error).message }],
+            isError: true,
+          };
+        }
+      }) as any
     );
   }
 
@@ -100,6 +116,7 @@ app.use(express.json({ limit: "10mb" }));
 app.post("/mcp", async (req, res) => {
   const key = extractApiKey(req);
   if (!key) return res.status(401).json({ error: "missing api key" });
+  console.log(JSON.stringify({ ts: new Date().toISOString(), transport: "streamable" }));
   const srv = buildServer(key);
   const transport = new StreamableHTTPServerTransport({
     sessionIdGenerator: () => randomUUID(),
@@ -119,6 +136,8 @@ app.get("/sse", async (req, res) => {
   const srv = buildServer(key);
   await srv.connect(transport);
   sseSessions.set(transport.sessionId, { transport, server: srv });
+  console.log(JSON.stringify({ ts: new Date().toISOString(), transport: "sse", session: transport.sessionId }));
+  transport.onclose = () => sseSessions.delete(transport.sessionId);
   setTimeout(() => {
     void transport.close();
     sseSessions.delete(transport.sessionId);
@@ -133,7 +152,12 @@ app.post("/messages", async (req, res) => {
   await s.transport.handlePostMessage(req, res, req.body);
 });
 
-app.get("/health", (_, res) => res.json({ ok: true }));
+app.get("/health", async (_, res) => {
+  const apiOk = await fetch(
+    (process.env.FORGE_API_URL ?? "http://localhost:4000") + "/health"
+  ).then((r) => r.ok).catch(() => false);
+  res.json({ ok: true, api: apiOk });
+});
 
 const port = Number(process.env.PORT ?? 4100);
 const httpServer = app.listen(port, () => console.log(`forge-mcp on :${port}`));
@@ -164,4 +188,3 @@ wss.on("connection", (ws, req) => {
     if (uiBridges.get(key) === ws) uiBridges.delete(key);
   });
 });
-

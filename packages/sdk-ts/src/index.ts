@@ -163,15 +163,21 @@ export type RunTrace = z.infer<typeof RunTraceSchema>;
 export interface ForgeClientOptions {
   baseUrl?: string;
   token?: string;
+  timeout?: number;
+  onLog?: (method: string, url: string, status: number, ms: number) => void;
 }
 
 export class ForgeClient {
   private readonly base: string;
   private token: string | undefined;
+  private readonly timeout: number;
+  private readonly opts: ForgeClientOptions;
 
   constructor(opts: ForgeClientOptions = {}) {
     this.base = opts.baseUrl ?? "https://api.forge.sh";
     this.token = opts.token;
+    this.timeout = opts.timeout ?? 30000;
+    this.opts = opts;
   }
 
   setToken(token: string): void {
@@ -190,13 +196,31 @@ export class ForgeClient {
     path: string,
     body?: unknown
   ): Promise<T> {
-    const res = await fetch(`${this.base}${path}`, {
+    const url = `${this.base}${path}`;
+    const fetchOpts: RequestInit = {
       method,
       headers: this.headers(),
       body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
+    };
+    const start = Date.now();
+    let res: Response | undefined;
+    const maxRetries = 3;
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      const fetchPromise = fetch(url, fetchOpts);
+      const timeoutPromise = new Promise<never>((_, rej) =>
+        setTimeout(() => rej(new Error("request timeout")), this.timeout)
+      );
+      res = await Promise.race([fetchPromise, timeoutPromise]);
+      if (res.status >= 500 && attempt < maxRetries - 1) {
+        await new Promise((r) => setTimeout(r, 200 * Math.pow(2, attempt)));
+        continue;
+      }
+      break;
+    }
+    if (!res) throw new Error("No response received");
+    this.opts.onLog?.(method, url, res.status, Date.now() - start);
     if (!res.ok) {
-      const msg = await res.text().catch(() => res.statusText);
+      const msg = await res.text().catch(() => res!.statusText);
       throw new Error(`HTTP ${res.status}: ${msg}`);
     }
     if (res.status === 204) return undefined as T;
@@ -250,6 +274,9 @@ export class ForgeClient {
   getSwarm(id: string): Promise<Swarm> {
     return this.request(SwarmSchema, "GET", `/v1/swarms/${id}`);
   }
+  updateSwarm(id: string, patch: Partial<Pick<Swarm, "status">>): Promise<Swarm> {
+    return this.request(SwarmSchema, "PATCH", `/v1/swarms/${id}`, patch);
+  }
   sendMessage(swarmId: string, msg: MessageCreate): Promise<Message> {
     return this.request(MessageSchema, "POST", `/v1/swarms/${swarmId}/messages`, msg);
   }
@@ -264,5 +291,10 @@ export class ForgeClient {
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.text();
+  }
+
+  // ── Bench ─────────────────────────────────────────────────────────────────
+  getBenchLeaderboard(): Promise<unknown[]> {
+    return this.request(z.array(z.unknown()), "GET", "/v1/bench/leaderboard");
   }
 }

@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { invoke as tauriInvoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 
 export type BlockEvent =
@@ -9,6 +9,19 @@ export type BlockEvent =
 
 export type PtyDataEvent = { paneId: string; bytes: string };
 export type PtyExitEvent = { paneId: string; code: number };
+
+async function invoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T | undefined> {
+  try {
+    return await tauriInvoke<T>(cmd, args);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes("not available")) {
+      console.warn(`[ipc] ${cmd} not available in this context`);
+      return undefined;
+    }
+    throw err;
+  }
+}
 
 export async function spawnPane(args: {
   workspaceId: string;
@@ -65,4 +78,25 @@ export async function onPtyExit(
   cb: (e: PtyExitEvent) => void
 ): Promise<UnlistenFn> {
   return listen<PtyExitEvent>(`pty_exit::${paneId}`, (e) => cb(e.payload));
+}
+
+export function decodeFrame(data: Uint8Array): { paneId: string; bytes: Uint8Array; ts: number } {
+  const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+  const length = view.getUint32(0, false); // big-endian
+  const jsonBytes = data.slice(4, 4 + length);
+  const text = new TextDecoder().decode(jsonBytes);
+  const parsed = JSON.parse(text) as { paneId: string; bytes: string; ts: number };
+  const bytes = Uint8Array.from(atob(parsed.bytes), (c) => c.charCodeAt(0));
+  return { paneId: parsed.paneId, bytes, ts: parsed.ts };
+}
+
+export async function onPtyDataBinary(
+  paneId: string,
+  cb: (bytes: Uint8Array, ts: number) => void
+): Promise<UnlistenFn> {
+  return listen<number[]>(`pty_data_binary::${paneId}`, (e) => {
+    const raw = new Uint8Array(e.payload);
+    const { bytes, ts } = decodeFrame(raw);
+    cb(bytes, ts);
+  });
 }

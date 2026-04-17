@@ -11,7 +11,7 @@ type AgentsState = {
 
   selectProject: (projectId: string | null) => void;
   refresh: () => Promise<void>;
-  createAgent: (input: { name: string; systemPrompt: string }) => Promise<Agent | null>;
+  createAgent: (input: { name: string; systemPrompt: string; model?: string; cliBinary?: string; cliArgs?: string[] }) => Promise<Agent | null>;
   updateAgent: (id: string, patch: Partial<Agent>) => Promise<void>;
   deleteAgent: (id: string) => Promise<void>;
   selectAgent: (id: string | null) => void;
@@ -83,12 +83,12 @@ export const useAgents = create<AgentsState>((set, get) => ({
     }
   },
 
-  createAgent: async ({ name, systemPrompt }) => {
+  createAgent: async ({ name, systemPrompt, model = "claude-opus-4-7", cliBinary = "claude", cliArgs = [] }) => {
     const { projectId } = get();
     if (!projectId) return null;
     if (name.length > 255) throw new Error("name too long");
     if (systemPrompt.length > 100000) throw new Error("systemPrompt too long");
-    const agent = await api.createAgent({ projectId, name, systemPrompt });
+    const agent = await api.createAgent({ projectId, name, systemPrompt, model, cliBinary, cliArgs });
     set((s) => ({ agents: [...s.agents, agent] }));
     return agent;
   },

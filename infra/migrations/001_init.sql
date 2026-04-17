@@ -123,4 +123,17 @@ BEGIN
 END;
 $$;
 
+-- ── bench_results ─────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS "BenchResult" (
+    "id"         UUID        NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+    "category"   TEXT        NOT NULL,
+    "model"      TEXT        NOT NULL,
+    "taskId"     TEXT        NOT NULL,
+    "score"      FLOAT8      NOT NULL CHECK ("score" >= 0 AND "score" <= 1),
+    "durationMs" INTEGER     NOT NULL CHECK ("durationMs" >= 0),
+    "output"     TEXT,
+    "createdAt"  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS "BenchResult_category_model_idx" ON "BenchResult" ("category", "model");
+
 COMMIT;

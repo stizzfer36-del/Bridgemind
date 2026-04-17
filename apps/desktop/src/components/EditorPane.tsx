@@ -34,6 +34,13 @@ function langFor(path?: string): Extension[] {
       return [css()];
     case "html":
       return [html()];
+    case "yaml":
+    case "yml":
+      return []; // @codemirror/lang-yaml not installed; no highlighting
+    case "sh":
+    case "bash":
+    case "zsh":
+      return []; // no shell lang package, fall through to no highlighting
     default:
       return [];
   }
@@ -58,7 +65,7 @@ export default function EditorPane({
       let content = "";
       if (filePath) {
         try {
-          content = await openFile(filePath);
+          content = (await openFile(filePath)) ?? "";
         } catch {
           content = "";
         }
@@ -101,12 +108,32 @@ export default function EditorPane({
     setDirty(false);
   }
 
+  useEffect(() => {
+    const handler = () => {
+      void onSave();
+    };
+    document.addEventListener("forge:save-editor", handler);
+    return () => document.removeEventListener("forge:save-editor", handler);
+  });
+
+  const ext = filePath?.split(".").pop()?.toLowerCase() ?? "";
+  const langLabel: Record<string, string> = {
+    ts: "TypeScript", tsx: "TypeScript (JSX)", js: "JavaScript", jsx: "JavaScript (JSX)",
+    json: "JSON", md: "Markdown", py: "Python", rs: "Rust", css: "CSS",
+    html: "HTML", yaml: "YAML", yml: "YAML", sh: "Shell", bash: "Shell", zsh: "Shell",
+  };
+
   return (
     <div className="editor-pane">
       <div className="editor-toolbar">
-        <span className="editor-path">{filePath ?? "(no file)"}</span>
-        {dirty && <span className="dirty">●</span>}
-        <button onClick={onSave} disabled={!filePath}>
+        <span className="editor-path">
+          {filePath ?? "(no file)"}
+          {dirty && <span className="dirty" title="Unsaved changes"> ●</span>}
+        </span>
+        {ext && langLabel[ext] && (
+          <span style={{ opacity: 0.5, fontSize: "10px" }}>{langLabel[ext]}</span>
+        )}
+        <button onClick={() => void onSave()} disabled={!filePath}>
           Save
         </button>
       </div>

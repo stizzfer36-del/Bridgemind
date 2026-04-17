@@ -1,3 +1,6 @@
+use std::fmt;
+use std::time::Duration;
+
 use serde::{Deserialize, Serialize};
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -197,12 +200,76 @@ pub struct ForgeClient {
     http: reqwest::Client,
 }
 
+impl fmt::Debug for ForgeClient {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ForgeClient")
+            .field("base", &self.base)
+            .field("token", &self.token.as_deref().map(|_| "[redacted]"))
+            .finish()
+    }
+}
+
+// ── Builder ───────────────────────────────────────────────────────────────────
+
+pub struct ForgeClientBuilder {
+    base: String,
+    token: Option<String>,
+    timeout_secs: u64,
+}
+
+impl Default for ForgeClientBuilder {
+    fn default() -> Self {
+        Self {
+            base: "https://api.forge.sh".into(),
+            token: None,
+            timeout_secs: 30,
+        }
+    }
+}
+
+impl ForgeClientBuilder {
+    pub fn base(mut self, b: impl Into<String>) -> Self {
+        self.base = b.into();
+        self
+    }
+
+    pub fn token(mut self, t: impl Into<String>) -> Self {
+        self.token = Some(t.into());
+        self
+    }
+
+    pub fn timeout(mut self, secs: u64) -> Self {
+        self.timeout_secs = secs;
+        self
+    }
+
+    pub fn build(self) -> ForgeClient {
+        let http = reqwest::Client::builder()
+            .timeout(Duration::from_secs(self.timeout_secs))
+            .build()
+            .unwrap_or_default();
+        ForgeClient {
+            base: self.base.trim_end_matches('/').to_owned(),
+            token: self.token,
+            http,
+        }
+    }
+}
+
 impl ForgeClient {
+    pub fn builder() -> ForgeClientBuilder {
+        ForgeClientBuilder::default()
+    }
+
     pub fn new(base: impl Into<String>, token: impl Into<Option<String>>) -> Self {
+        let http = reqwest::Client::builder()
+            .timeout(Duration::from_secs(30))
+            .build()
+            .unwrap_or_default();
         Self {
             base: base.into().trim_end_matches('/').to_owned(),
             token: token.into(),
-            http: reqwest::Client::new(),
+            http,
         }
     }
 
