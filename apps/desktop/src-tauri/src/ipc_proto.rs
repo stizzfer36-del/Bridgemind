@@ -43,3 +43,51 @@ pub fn now_ms() -> i64 {
         .map(|d| d.as_millis() as i64)
         .unwrap_or(0)
 }
+
+/// Decode a length-prefixed frame (4-byte big-endian length + payload).
+/// Returns the payload bytes or an error if the input is too short.
+pub fn decode_frame(data: &[u8]) -> Result<Vec<u8>, String> {
+    if data.len() < 4 {
+        return Err(format!(
+            "frame too short: need at least 4 header bytes, got {}",
+            data.len()
+        ));
+    }
+    let len = u32::from_be_bytes([data[0], data[1], data[2], data[3]]) as usize;
+    if data.len() < 4 + len {
+        return Err(format!(
+            "frame truncated: header says {} bytes, only {} available",
+            len,
+            data.len() - 4
+        ));
+    }
+    Ok(data[4..4 + len].to_vec())
+}
+
+/// Encode a block-event as a length-prefixed JSON blob.
+///
+/// The frame format mirrors `encode_frame`: 4-byte big-endian length prefix
+/// followed by the JSON payload bytes.
+pub fn encode_block_event(
+    pane_id: &str,
+    kind: &str,
+    exit_code: Option<i32>,
+    command_text: Option<&str>,
+    ts: i64,
+) -> Vec<u8> {
+    let json = serde_json::json!({
+        "type": "block",
+        "paneId": pane_id,
+        "kind": kind,
+        "exitCode": exit_code,
+        "commandText": command_text,
+        "ts": ts,
+    })
+    .to_string();
+    let payload = json.as_bytes();
+    let len = payload.len() as u32;
+    let mut out = Vec::with_capacity(4 + payload.len());
+    out.extend_from_slice(&len.to_be_bytes());
+    out.extend_from_slice(payload);
+    out
+}

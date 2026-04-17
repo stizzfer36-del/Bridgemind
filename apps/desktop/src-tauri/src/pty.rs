@@ -3,6 +3,8 @@ use std::io::{Read, Write};
 use std::sync::Arc;
 use std::thread;
 
+use base64::engine::general_purpose;
+use base64::Engine;
 use parking_lot::Mutex;
 use portable_pty::{native_pty_system, CommandBuilder, MasterPty, PtySize};
 use serde::{Deserialize, Serialize};
@@ -18,6 +20,13 @@ pub struct Pane {
 #[derive(Default)]
 pub struct PtyManager {
     panes: Mutex<HashMap<String, Pane>>,
+}
+
+impl PtyManager {
+    /// Drop all panes, which closes their PTY masters and writers.
+    pub fn shutdown_all(&self) {
+        self.panes.lock().clear();
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -44,6 +53,13 @@ struct PtyDataEvent {
 struct PtyExitEvent {
     pane_id: String,
     code: i32,
+}
+
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+struct PtyErrorEvent {
+    pane_id: String,
+    error: String,
 }
 
 #[tauri::command]
@@ -86,14 +102,30 @@ pub fn spawn_pane(
     // Ensure TERM is set for xterm compatibility
     cmd.env("TERM", "xterm-256color");
     cmd.env("COLORTERM", "truecolor");
+    cmd.env("FORGE_PANE_ID", &args.pane_id);
+    cmd.env("FORGE_WORKSPACE_ID", &args.workspace_id);
 
-    let mut child = pair.slave.spawn_command(cmd).map_err(|e| e.to_string())?;
+    let child_result = pair.slave.spawn_command(cmd);
+    let pane_id = args.pane_id.clone();
+
+    let mut child = match child_result {
+        Ok(c) => c,
+        Err(e) => {
+            let _ = app.emit(
+                &format!("pty_error::{}", pane_id),
+                PtyErrorEvent {
+                    pane_id: pane_id.clone(),
+                    error: e.to_string(),
+                },
+            );
+            return Ok(());
+        }
+    };
     drop(pair.slave);
 
     let reader = pair.master.try_clone_reader().map_err(|e| e.to_string())?;
     let writer = pair.master.take_writer().map_err(|e| e.to_string())?;
 
-    let pane_id = args.pane_id.clone();
     state.panes.lock().insert(
         pane_id.clone(),
         Pane {
@@ -102,7 +134,7 @@ pub fn spawn_pane(
         },
     );
 
-    // reader thread: pipe bytes out → emit pty_data + parse OSC 133
+    // reader thread: pipe bytes out → emit pty_data + parse OSC 133 + emit binary frame
     let app_clone = app.clone();
     let pane_id_clone = pane_id.clone();
     thread::spawn(move || {
@@ -114,18 +146,35 @@ pub fn spawn_pane(
                 Ok(0) => break,
                 Ok(n) => {
                     let chunk = &buf[..n];
+                    let chrono_ts = std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap_or_default()
+                        .as_millis() as i64;
+
                     for event in parser.feed(chunk) {
                         let _ = app_clone.emit(
                             &format!("block_event::{}", pane_id_clone),
                             event,
                         );
                     }
-                    // emit bytes as base64-ish string (use lossy utf8 + raw bytes channel)
+                    // UTF-8 text event (existing channel)
                     let payload = PtyDataEvent {
                         pane_id: pane_id_clone.clone(),
                         bytes: String::from_utf8_lossy(chunk).into_owned(),
                     };
                     let _ = app_clone.emit(&format!("pty_data::{}", pane_id_clone), payload);
+
+                    // Binary length-prefixed frame event
+                    let frame = crate::ipc_proto::encode_frame(
+                        &crate::ipc_proto::pb::PtyFrame {
+                            pane_id: pane_id_clone.clone(),
+                            data: chunk.to_vec(),
+                            ts_ms: chrono_ts,
+                            seq: 0,
+                        }
+                    );
+                    let encoded = general_purpose::STANDARD.encode(frame.as_ref());
+                    let _ = app_clone.emit(&format!("pty_data_binary::{}", pane_id_clone), encoded);
                 }
                 Err(_) => break,
             }

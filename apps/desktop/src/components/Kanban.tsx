@@ -24,6 +24,8 @@ export default function Kanban() {
   const stopPolling = useKanban((s) => s.stopPolling);
   const moveTask = useKanban((s) => s.moveTask);
   const [showNew, setShowNew] = useState(false);
+  const [filterQ, setFilterQ] = useState("");
+  const [detailTask, setDetailTask] = useState<Task | null>(null);
 
   useEffect(() => {
     if (!projectId) return;
@@ -31,6 +33,12 @@ export default function Kanban() {
     startPolling();
     return () => stopPolling();
   }, [projectId, refresh, startPolling, stopPolling]);
+
+  const filteredTasks = filterQ
+    ? tasks.filter((t) =>
+        t.instructions.toLowerCase().includes(filterQ.toLowerCase())
+      )
+    : tasks;
 
   if (!projectId) {
     return (
@@ -45,6 +53,12 @@ export default function Kanban() {
       {offline && <div className="banner offline">API unreachable — Kanban cached</div>}
       {error && !offline && <div className="banner error">{error}</div>}
       <div className="kanban-toolbar">
+        <input
+          placeholder="Filter tasks…"
+          value={filterQ}
+          onChange={(e) => setFilterQ(e.target.value)}
+          style={{ flex: 1, marginRight: "8px" }}
+        />
         <button onClick={() => setShowNew(true)}>+ New Task</button>
       </div>
       <div className="kanban-cols">
@@ -53,12 +67,16 @@ export default function Kanban() {
             key={c.status}
             status={c.status}
             label={c.label}
-            tasks={tasks.filter((t) => t.status === c.status)}
+            tasks={filteredTasks.filter((t) => t.status === c.status)}
             onMove={moveTask}
+            onDetail={setDetailTask}
           />
         ))}
       </div>
       {showNew && <NewTask onClose={() => setShowNew(false)} />}
+      {detailTask && (
+        <TaskDetailModal task={detailTask} onClose={() => setDetailTask(null)} />
+      )}
     </div>
   );
 }
@@ -68,6 +86,7 @@ function Column(props: {
   label: string;
   tasks: Task[];
   onMove: (taskId: string, s: TaskStatus) => void;
+  onDetail: (task: Task) => void;
 }) {
   return (
     <div
@@ -80,13 +99,36 @@ function Column(props: {
     >
       <h4>{props.label}</h4>
       {props.tasks.map((t) => (
-        <Card key={t.id} task={t} />
+        <Card key={t.id} task={t} onDetail={props.onDetail} />
       ))}
     </div>
   );
 }
 
-function Card({ task }: { task: Task }) {
+function TaskDetailModal({ task, onClose }: { task: Task; onClose: () => void }) {
+  return (
+    <div className="task-modal-overlay" onClick={onClose}>
+      <div className="task-modal" onClick={(e) => e.stopPropagation()}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px" }}>
+          <strong>Task Detail</strong>
+          <button onClick={onClose}>×</button>
+        </div>
+        <div style={{ marginBottom: "8px" }}>
+          <div style={{ fontSize: "11px", opacity: 0.6, marginBottom: "4px" }}>Instructions</div>
+          <pre style={{ margin: 0, whiteSpace: "pre-wrap", fontSize: "12px" }}>{task.instructions}</pre>
+        </div>
+        {task.taskKnowledge && (
+          <div>
+            <div style={{ fontSize: "11px", opacity: 0.6, marginBottom: "4px" }}>Task Knowledge</div>
+            <pre style={{ margin: 0, whiteSpace: "pre-wrap", fontSize: "12px" }}>{task.taskKnowledge}</pre>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Card({ task, onDetail }: { task: Task; onDetail: (task: Task) => void }) {
   const selectedAgentId = useAgents((s) => s.selectedAgentId);
   const agents = useAgents((s) => s.agents);
   const activeTabId = useWorkspace((s) => s.activeTabId);
@@ -94,6 +136,7 @@ function Card({ task }: { task: Task }) {
   const projectPaths = useWorkspace((s) => s.projectPaths);
   const setProjectPath = useWorkspace((s) => s.setProjectPath);
   const moveTask = useKanban((s) => s.moveTask);
+  const [confirmRun, setConfirmRun] = useState(false);
 
   async function resolveProjectPath(): Promise<string | null> {
     const stored = projectPaths[task.projectId];
@@ -107,6 +150,7 @@ function Card({ task }: { task: Task }) {
   }
 
   async function runTask() {
+    setConfirmRun(false);
     const path = await resolveProjectPath();
     if (!path) return;
     const agent = agents.find((a) => a.id === selectedAgentId) ?? agents[0];
@@ -115,19 +159,12 @@ function Card({ task }: { task: Task }) {
     if (!tab) return;
     const pane = tab.panes[0];
     if (!pane) return;
-    await spawnPane({
-      workspaceId: tab.id,
-      paneId: pane.id,
-      cwd: path,
-    });
+    await spawnPane({ workspaceId: tab.id, paneId: pane.id, cwd: path });
     await moveTask(task.id, "in-progress");
-    await launchAgentInPane(pane.id, {
-      task,
-      agent,
-      projectAbsolutePath: path,
-    });
+    await launchAgentInPane(pane.id, { task, agent, projectAbsolutePath: path });
   }
 
+  const agent = agents.find((a) => a.id === selectedAgentId) ?? agents[0];
   const title = (task.instructions || "").slice(0, 60);
 
   return (
@@ -135,14 +172,28 @@ function Card({ task }: { task: Task }) {
       className="card"
       draggable
       onDragStart={(e) => e.dataTransfer.setData("text/task-id", task.id)}
+      onClick={() => onDetail(task)}
     >
       <div className="card-title">{title}</div>
       <div className="card-meta">
         <span className={`pill status-${task.status}`}>{task.status}</span>
-        <button className="run" onClick={runTask}>
+        <button
+          className="run"
+          onClick={(e) => {
+            e.stopPropagation();
+            setConfirmRun(true);
+          }}
+        >
           Run Task
         </button>
       </div>
+      {confirmRun && (
+        <div className="card-confirm" onClick={(e) => e.stopPropagation()} style={{ marginTop: "6px", fontSize: "11px" }}>
+          Run with {agent?.name ?? "agent"}?{" "}
+          <button onClick={() => void runTask()} style={{ marginRight: "4px" }}>Yes</button>
+          <button onClick={() => setConfirmRun(false)}>Cancel</button>
+        </div>
+      )}
     </div>
   );
 }
@@ -175,7 +226,7 @@ function NewTask({ onClose }: { onClose: () => void }) {
         />
         <div className="modal-actions">
           <button onClick={onClose}>Cancel</button>
-          <button onClick={submit}>Create</button>
+          <button onClick={() => void submit()}>Create</button>
         </div>
       </div>
     </div>

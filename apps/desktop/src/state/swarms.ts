@@ -14,7 +14,8 @@ type SwarmsState = {
   refresh: () => Promise<void>;
   send: (from: string, to: string | undefined, body: string) => Promise<void>;
   setFilter: (agentId: string | null) => void;
-  stop: () => void;
+  stop: (swarmId?: string) => Promise<void>;
+  filterMessages: (swarmId: string, since: number, until?: number) => Message[];
 };
 
 export const useSwarms = create<SwarmsState>((set, get) => ({
@@ -35,7 +36,7 @@ export const useSwarms = create<SwarmsState>((set, get) => ({
       })),
     });
     set({ active: swarm, mailbox: swarm.mailbox ?? [] });
-    get().refresh();
+    void get().refresh();
     return swarm;
   },
 
@@ -68,9 +69,26 @@ export const useSwarms = create<SwarmsState>((set, get) => ({
 
   setFilter: (agentId) => set({ filterAgentId: agentId }),
 
-  stop: () => {
-    const id = get().pollId;
-    if (id != null) window.clearInterval(id);
+  stop: async (swarmId) => {
+    const id = swarmId ?? get().active?.id;
+    if (id) {
+      try {
+        await api.updateSwarm(id, { status: "done" });
+      } catch {
+        // best-effort
+      }
+    }
+    const pollId = get().pollId;
+    if (pollId != null) window.clearInterval(pollId);
     set({ pollId: null, active: null, mailbox: [] });
+  },
+
+  filterMessages: (swarmId, since, until) => {
+    return get().mailbox.filter(
+      (m) =>
+        m.swarmId === swarmId &&
+        m.ts >= since &&
+        (until === undefined || m.ts <= until)
+    );
   },
 }));

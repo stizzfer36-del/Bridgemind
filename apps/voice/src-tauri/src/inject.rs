@@ -3,9 +3,17 @@
 
 #[cfg(target_os = "macos")]
 pub fn inject_text(text: &str) -> anyhow::Result<()> {
-    // Real impl uses AXUIElementSetAttributeValue on the focused AXUIElement.
-    // For the scaffold we fall back to the clipboard + Cmd+V approach.
-    let _ = text;
+    use std::process::Command;
+    let escaped = text.replace('\\', "\\\\").replace('"', "\\\"");
+    Command::new("osascript")
+        .args([
+            "-e",
+            &format!(
+                "set the clipboard to \"{escaped}\"\n\
+                 tell application \"System Events\" to keystroke \"v\" using command down"
+            ),
+        ])
+        .status()?;
     Ok(())
 }
 
@@ -18,17 +26,33 @@ pub fn inject_text(text: &str) -> anyhow::Result<()> {
 
 #[cfg(target_os = "linux")]
 pub fn inject_text(text: &str) -> anyhow::Result<()> {
-    // Real impl shells out to `wtype` (Wayland) or `xdotool type` (X11).
-    let bin = if std::env::var("WAYLAND_DISPLAY").is_ok() {
-        "wtype"
+    let (bin, args): (&str, Vec<&str>) = if std::env::var("WAYLAND_DISPLAY").is_ok() {
+        ("wtype", vec![text])
     } else {
-        "xdotool"
+        ("xdotool", vec!["type", "--", text])
     };
-    let args: &[&str] = if bin == "wtype" {
-        &[text]
-    } else {
-        &["type", "--", text]
-    };
-    std::process::Command::new(bin).args(args).status()?;
+    let status = std::process::Command::new(bin)
+        .args(&args)
+        .status()
+        .map_err(|e| {
+            anyhow::anyhow!(
+                "failed to launch '{}' for text injection: {}. \
+                 Install {} to enable text injection on Linux.",
+                bin,
+                e,
+                if std::env::var("WAYLAND_DISPLAY").is_ok() {
+                    "wtype (https://github.com/atx/wtype)"
+                } else {
+                    "xdotool (apt install xdotool)"
+                }
+            )
+        })?;
+    if !status.success() {
+        anyhow::bail!(
+            "text injection via '{}' exited with status {}",
+            bin,
+            status
+        );
+    }
     Ok(())
 }

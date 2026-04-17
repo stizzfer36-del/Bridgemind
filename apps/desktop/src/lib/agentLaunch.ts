@@ -8,9 +8,15 @@ export type LaunchContext = {
 };
 
 /**
- * Build the agent launch template. Mirrors the docs step list:
- *   determine project folder → create terminal → construct command with
- *   knowledge context → wait for prompt → send command → monitor.
+ * Escapes single quotes for safe use inside a shell heredoc or single-quoted string.
+ * Replaces ' with '\''
+ */
+export function shellEscape(s: string): string {
+  return s.replace(/'/g, "'\\''");
+}
+
+/**
+ * Build the agent launch template based on cliBinary.
  */
 export function buildLaunchCommand(ctx: LaunchContext): string {
   const { task, agent, projectAbsolutePath } = ctx;
@@ -20,18 +26,30 @@ export function buildLaunchCommand(ctx: LaunchContext): string {
   const instructions = task.instructions ?? "";
   const knowledge = task.taskKnowledge ?? "";
 
-  return [
-    `cd ${quotedPath} && ${binary} ${args}`.trim() + ` <<'PROMPT'`,
-    `# Task: ${task.id}`,
-    `## Instructions`,
-    instructions,
-    `## Knowledge`,
-    knowledge,
-    `## Contract`,
-    `When done, call the BridgeMind MCP tool \`update_task\` with taskId=${task.id} and status="in-review". If blocked, status="todo" with updated instructions.`,
-    `PROMPT`,
-    ``,
-  ].join("\n");
+  if (binary === "claude") {
+    return [
+      `cd ${quotedPath} && ${binary} ${args}`.trim() + ` <<'PROMPT'`,
+      `# Task: ${task.id}`,
+      `## Instructions`,
+      instructions,
+      `## Knowledge`,
+      knowledge,
+      `## Contract`,
+      `When done, call the Forge MCP tool \`update_task\` with taskId=${task.id} and status="in-review". If blocked, status="todo" with updated instructions.`,
+      `PROMPT`,
+      ``,
+    ].join("\n");
+  }
+
+  if (binary === "cursor-agent") {
+    const escapedInstructions = shellEscape(instructions);
+    return `cd ${quotedPath} && cursor-agent run --task '${escapedInstructions}'\n`;
+  }
+
+  // Generic fallback
+  const argsStr = args ? ` ${args}` : "";
+  const escapedInstructions = shellEscape(instructions);
+  return `cd ${quotedPath} && ${binary}${argsStr} '${escapedInstructions}'\n`;
 }
 
 /**

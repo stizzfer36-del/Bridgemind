@@ -68,9 +68,69 @@ export type RunTraceEvent =
 
 export type RunTrace = { id: string; taskId: string; events: RunTraceEvent[] };
 
+export type BenchLeaderboardEntry = {
+  agentId: string;
+  name: string;
+  score: number;
+  rank: number;
+};
+
+// In-flight dedup cache for GET requests
+const inflight = new Map<string, Promise<Response>>();
+
+async function fetchWithRetry(
+  url: string,
+  opts: RequestInit,
+  retries = 3
+): Promise<Response> {
+  const isGet = !opts.method || opts.method.toUpperCase() === "GET";
+
+  if (isGet && inflight.has(url)) {
+    return inflight.get(url)!;
+  }
+
+  const doFetch = async (): Promise<Response> => {
+    let lastError: unknown;
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        const res = await fetch(url, opts);
+        if (res.status >= 500 && attempt < retries - 1) {
+          await new Promise((r) => setTimeout(r, 200 * Math.pow(2, attempt)));
+          continue;
+        }
+        return res;
+      } catch (err) {
+        lastError = err;
+        if (err instanceof TypeError) {
+          // Network error — check connectivity
+          if (!navigator.onLine) {
+            throw new TypeError("Network offline");
+          }
+          if (attempt < retries - 1) {
+            await new Promise((r) => setTimeout(r, 200 * Math.pow(2, attempt)));
+            continue;
+          }
+        }
+        throw err;
+      }
+    }
+    throw lastError;
+  };
+
+  const promise = doFetch();
+
+  if (isGet) {
+    inflight.set(url, promise);
+    void promise.finally(() => inflight.delete(url));
+  }
+
+  return promise;
+}
+
 async function req<T>(path: string, init: RequestInit = {}): Promise<T> {
   const key = await getApiKey();
-  const res = await fetch(`${API_URL}${path}`, {
+  const url = `${API_URL}${path}`;
+  const res = await fetchWithRetry(url, {
     ...init,
     headers: {
       "content-type": "application/json",
@@ -129,6 +189,8 @@ export const createSwarm = (body: {
   roles: Omit<Role, "paneId">[];
 }) => req<Swarm>("/v1/swarms", { method: "POST", body: JSON.stringify(body) });
 export const getSwarm = (id: string) => req<Swarm>(`/v1/swarms/${id}`);
+export const updateSwarm = (id: string, patch: Partial<Pick<Swarm, "status">>) =>
+  req<Swarm>(`/v1/swarms/${id}`, { method: "PATCH", body: JSON.stringify(patch) });
 export const postSwarmMessage = (
   id: string,
   body: { from: string; to?: string; body: string }
@@ -140,3 +202,7 @@ export const postSwarmMessage = (
 
 // Runs
 export const getRunTrace = (id: string) => req<RunTrace>(`/v1/runs/${id}`);
+
+// Bench
+export const getBenchLeaderboard = () =>
+  req<BenchLeaderboardEntry[]>("/v1/bench/leaderboard");

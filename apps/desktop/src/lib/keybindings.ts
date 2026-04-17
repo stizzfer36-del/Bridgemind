@@ -19,9 +19,18 @@ export function installKeybindings(): () => void {
         ws.setSidebarView("agents");
         return;
       }
+      if (k === "p") {
+        e.preventDefault();
+        document.dispatchEvent(new CustomEvent("forge:command-palette"));
+        return;
+      }
     }
 
     switch (e.key.toLowerCase()) {
+      case "s":
+        e.preventDefault();
+        document.dispatchEvent(new CustomEvent("forge:save-editor"));
+        break;
       case "t":
         e.preventDefault();
         ws.newTab();
