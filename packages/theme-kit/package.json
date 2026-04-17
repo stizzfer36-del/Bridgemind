@@ -6,7 +6,17 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "description": "JSON schema + validator for Forge themes.",
+  "bin": {
+    "forge-validate-themes": "src/validate.ts"
+  },
+  "scripts": {
+    "validate": "node --import tsx/esm src/validate.ts"
+  },
   "dependencies": {
     "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.15.0",
+    "typescript": "^5.4.0"
   }
 }

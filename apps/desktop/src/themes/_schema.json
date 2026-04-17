@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://forge.sh/schemas/theme.json",
+  "title": "ForgeTheme",
+  "description": "Color theme for the Forge ADE. All color values must be hex (#rrggbb or #rgb).",
+  "type": "object",
+  "required": ["name", "bg", "fg", "accent", "border", "ansi", "syntax"],
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "Human-readable theme name shown in the picker."
+    },
+    "bg": {
+      "type": "string",
+      "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$",
+      "description": "Primary background color."
+    },
+    "fg": {
+      "type": "string",
+      "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$",
+      "description": "Primary foreground / text color."
+    },
+    "muted": {
+      "type": "string",
+      "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$",
+      "description": "Secondary / dimmed text color."
+    },
+    "accent": {
+      "type": "string",
+      "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$",
+      "description": "Accent / highlight color for buttons and focus rings."
+    },
+    "border": {
+      "type": "string",
+      "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$",
+      "description": "Border / separator color."
+    },
+    "ansi": {
+      "type": "object",
+      "description": "16-color ANSI palette for xterm.js.",
+      "required": [
+        "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white",
+        "brightBlack", "brightRed", "brightGreen", "brightYellow",
+        "brightBlue", "brightMagenta", "brightCyan", "brightWhite"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "black":        { "type": "string", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$" },
+        "red":          { "type": "string", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$" },
+        "green":        { "type": "string", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$" },
+        "yellow":       { "type": "string", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$" },
+        "blue":         { "type": "string", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$" },
+        "magenta":      { "type": "string", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$" },
+        "cyan":         { "type": "string", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$" },
+        "white":        { "type": "string", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$" },
+        "brightBlack":  { "type": "string", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$" },
+        "brightRed":    { "type": "string", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$" },
+        "brightGreen":  { "type": "string", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$" },
+        "brightYellow": { "type": "string", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$" },
+        "brightBlue":   { "type": "string", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$" },
+        "brightMagenta":{ "type": "string", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$" },
+        "brightCyan":   { "type": "string", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$" },
+        "brightWhite":  { "type": "string", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$" }
+      }
+    },
+    "syntax": {
+      "type": "object",
+      "description": "Syntax highlighting tokens for CodeMirror.",
+      "required": ["keyword", "string", "number", "comment", "function", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "keyword":  { "type": "string", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$" },
+        "string":   { "type": "string", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$" },
+        "number":   { "type": "string", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$" },
+        "comment":  { "type": "string", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$" },
+        "function": { "type": "string", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$" },
+        "type":     { "type": "string", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$" },
+        "operator": { "type": "string", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$" }
+      }
+    },
+    "block": {
+      "type": "object",
+      "description": "CommandBlock border colors by exit status.",
+      "required": ["success", "failure", "running"],
+      "additionalProperties": false,
+      "properties": {
+        "success": { "type": "string", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$" },
+        "failure": { "type": "string", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$" },
+        "running": { "type": "string", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$" }
+      }
+    }
+  }
+}
