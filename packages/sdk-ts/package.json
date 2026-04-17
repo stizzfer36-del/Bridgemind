@@ -4,10 +4,17 @@
   "private": true,
   "type": "module",
   "description": "TypeScript SDK generated from spec/openapi.yaml.",
-  "main": "generated/index.ts",
-  "types": "generated/index.ts",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
-    "generate": "openapi-generator-cli generate -i ../../spec/openapi.yaml -g typescript-fetch -o generated"
+    "generate": "openapi-generator-cli generate -i ../../spec/openapi.yaml -g typescript-fetch -o generated",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.23.0"
   },
   "devDependencies": {
     "@openapitools/openapi-generator-cli": "^2.13.0",
