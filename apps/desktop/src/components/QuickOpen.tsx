@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useWorkspace } from "../state/workspace";
 
-type FileEntry = { name: string; path: string };
+type FileEntry = { name: string; path: string; rel: string };
 
 function fuzzyMatch(q: string, s: string): number {
   q = q.toLowerCase();
@@ -18,38 +18,76 @@ function fuzzyMatch(q: string, s: string): number {
   return score;
 }
 
+async function indexDir(root: string): Promise<FileEntry[]> {
+  try {
+    const { readDir } = await import("@tauri-apps/plugin-fs");
+    const entries: FileEntry[] = [];
+    async function recurse(dir: string, prefix: string) {
+      const items = await readDir(dir);
+      for (const item of items) {
+        const fullPath = `${dir}/${item.name}`;
+        const rel = prefix ? `${prefix}/${item.name}` : (item.name ?? "");
+        if (item.isDirectory) {
+          await recurse(fullPath, rel);
+        } else {
+          entries.push({ name: item.name ?? "", path: fullPath, rel });
+        }
+      }
+    }
+    await recurse(root, "");
+    return entries;
+  } catch {
+    return [];
+  }
+}
+
 export default function QuickOpen() {
   const visible = useWorkspace((s) => s.quickOpenVisible);
   const toggle = useWorkspace((s) => s.toggleQuickOpen);
   const setPane = useWorkspace((s) => s.setPane);
   const activeTabId = useWorkspace((s) => s.activeTabId);
   const tabs = useWorkspace((s) => s.tabs);
+  const projectPaths = useWorkspace((s) => s.projectPaths);
 
   const [q, setQ] = useState("");
-  const [entries] = useState<FileEntry[]>([
-    // Seeded — a real impl would index the active folder via fs:readDir.
-    { name: "App.tsx", path: "src/App.tsx" },
-    { name: "main.tsx", path: "src/main.tsx" },
-    { name: "package.json", path: "package.json" },
-    { name: "README.md", path: "README.md" },
-  ]);
+  const [debouncedQ, setDebouncedQ] = useState("");
+  const [entries, setEntries] = useState<FileEntry[]>([]);
+  const [selectedIdx, setSelectedIdx] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const debounceRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (visible) {
       setQ("");
+      setDebouncedQ("");
+      setSelectedIdx(0);
       requestAnimationFrame(() => inputRef.current?.focus());
+      const paths = Object.values(projectPaths);
+      const root = paths[0];
+      if (root) {
+        void indexDir(root).then(setEntries);
+      }
     }
-  }, [visible]);
+  }, [visible, projectPaths]);
+
+  function handleQChange(value: string) {
+    setQ(value);
+    if (debounceRef.current != null) window.clearTimeout(debounceRef.current);
+    debounceRef.current = window.setTimeout(() => {
+      setDebouncedQ(value);
+      setSelectedIdx(0);
+    }, 100);
+  }
 
   const results = useMemo(() => {
-    if (!q) return entries;
+    if (!debouncedQ) return entries.slice(0, 50);
     return entries
-      .map((e) => ({ e, score: fuzzyMatch(q, e.name) }))
+      .map((e) => ({ e, score: fuzzyMatch(debouncedQ, e.rel) }))
       .filter((x) => x.score >= 0)
       .sort((a, b) => b.score - a.score)
+      .slice(0, 50)
       .map((x) => x.e);
-  }, [q, entries]);
+  }, [debouncedQ, entries]);
 
   function openPath(path: string) {
     const tab = tabs.find((t) => t.id === activeTabId);
@@ -70,18 +108,24 @@ export default function QuickOpen() {
         <input
           ref={inputRef}
           value={q}
-          onChange={(e) => setQ(e.target.value)}
+          onChange={(e) => handleQChange(e.target.value)}
           placeholder="Go to file…"
           onKeyDown={(e) => {
-            if (e.key === "Escape") toggle();
-            if (e.key === "Enter" && results[0]) openPath(results[0].path);
+            if (e.key === "Escape") { toggle(); return; }
+            if (e.key === "ArrowDown") { e.preventDefault(); setSelectedIdx((i) => Math.min(i + 1, results.length - 1)); }
+            else if (e.key === "ArrowUp") { e.preventDefault(); setSelectedIdx((i) => Math.max(i - 1, 0)); }
+            else if (e.key === "Enter" && results[selectedIdx]) openPath(results[selectedIdx].path);
           }}
         />
         <ul>
-          {results.map((r) => (
-            <li key={r.path} onClick={() => openPath(r.path)}>
+          {results.map((r, idx) => (
+            <li
+              key={r.path}
+              onClick={() => openPath(r.path)}
+              style={idx === selectedIdx ? { background: "rgba(127,127,127,0.15)" } : undefined}
+            >
               <span className="name">{r.name}</span>
-              <span className="path">{r.path}</span>
+              <span className="path">{r.rel}</span>
             </li>
           ))}
         </ul>

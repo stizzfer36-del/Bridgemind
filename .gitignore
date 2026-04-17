@@ -8,9 +8,12 @@ build/
 *.tsbuildinfo
 
 # rust / tauri
-src-tauri/target/
+target/
+**/target/
 src-tauri/Cargo.lock
 src-tauri/gen/
+__pycache__/
+**/__pycache__/
 
 # editor
 .vscode/*
