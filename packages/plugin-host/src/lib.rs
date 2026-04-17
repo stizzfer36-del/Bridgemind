@@ -9,7 +9,8 @@ use anyhow::{anyhow, Context, Result};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use wasmtime::{Config, Engine, Linker, Module, Store, Trap};
-use wasmtime_wasi::{WasiCtxBuilder, WasiP1Ctx};
+use wasmtime_wasi::preview1::WasiP1Ctx;
+use wasmtime_wasi::{DirPerms, FilePerms, WasiCtxBuilder};
 
 /// Declared capabilities of a plugin.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -57,13 +58,8 @@ impl PluginHost {
 
         // Only expose scratch dir if fs:read or fs:write is permitted
         if permissions.contains("fs:read") || permissions.contains("fs:write") {
-            wasi_builder = wasi_builder
-                .preopened_dir(
-                    scratch_dir,
-                    "/scratch",
-                    wasmtime_wasi::DirPerms::all(),
-                    wasmtime_wasi::FilePerms::all(),
-                )
+            wasi_builder
+                .preopened_dir(scratch_dir, "/scratch", DirPerms::all(), FilePerms::all())
                 .context("preopening scratch dir")?;
         }
 
@@ -93,8 +89,9 @@ impl PluginHost {
         let ptr = alloc.call(&mut store, input_bytes.len() as u32)?;
         memory.write(&mut store, ptr as usize, input_bytes)?;
 
-        let packed = run.call(&mut store, (ptr, input_bytes.len() as u32))
-            .map_err(|e| {
+        let packed = run
+            .call(&mut store, (ptr, input_bytes.len() as u32))
+            .map_err(|e: anyhow::Error| -> anyhow::Error {
                 // Provide a clear error message on fuel exhaustion
                 if let Some(trap) = e.downcast_ref::<Trap>() {
                     if *trap == Trap::OutOfFuel {
