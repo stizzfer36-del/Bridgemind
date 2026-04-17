@@ -1,0 +1,19 @@
+{
+  "name": "Forge",
+  "bg": "#0b0d10",
+  "fg": "#d7e0ea",
+  "muted": "#6b7685",
+  "accent": "#ff8a3b",
+  "border": "#1e2431",
+  "ansi": {
+    "black": "#14171c", "red": "#f7768e", "green": "#9ece6a", "yellow": "#e0af68",
+    "blue": "#7aa2f7", "magenta": "#bb9af7", "cyan": "#7dcfff", "white": "#d7e0ea",
+    "brightBlack": "#414868", "brightRed": "#ff7a93", "brightGreen": "#b9f27c", "brightYellow": "#ff9e64",
+    "brightBlue": "#89b5ff", "brightMagenta": "#c5a1ff", "brightCyan": "#a4f0ff", "brightWhite": "#ffffff"
+  },
+  "syntax": {
+    "keyword": "#bb9af7", "string": "#9ece6a", "number": "#ff9e64", "comment": "#565f89",
+    "function": "#7aa2f7", "type": "#7dcfff", "operator": "#ff8a3b"
+  },
+  "block": { "success": "#36d399", "failure": "#ff4d4f", "running": "#f5c542" }
+}

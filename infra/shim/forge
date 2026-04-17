@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Forge CLI shim — installed to /usr/local/bin/forge by brew/scoop/apt.
+# `forge .` opens the ADE to $PWD; subcommands delegate to forge-code.
+
+set -eu
+
+CMD="${1:-}"
+
+case "$CMD" in
+  "."|"")
+    exec forge-desktop "$(pwd)"
+    ;;
+  plan|exec|review|run|workspace|bench|help|-h|--help)
+    exec forge-code "$@"
+    ;;
+  *)
+    if [ -d "$CMD" ]; then
+      exec forge-desktop "$CMD"
+    fi
+    exec forge-code "$@"
+    ;;
+esac

@@ -1,0 +1,12 @@
+Forge — mixed licensing.
+
+Each top-level directory carries its own LICENSE. Rough map:
+
+  apps/*             → MIT       (apps/*/LICENSE)
+  services/mcp/      → MIT       (services/mcp/LICENSE)
+  services/api/      → AGPL-3.0  (services/api/LICENSE)
+  packages/*         → MIT       (packages/*/LICENSE)
+  spec/              → CC0-1.0   (spec/LICENSE)
+
+Contributions to MIT-licensed paths are MIT. Contributions to the AGPL
+service require signing the contributor agreement at forge.sh/cla.

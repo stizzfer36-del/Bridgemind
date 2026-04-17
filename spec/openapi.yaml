@@ -1,0 +1,391 @@
+openapi: 3.1.0
+info:
+  title: Forge API
+  version: 1.0.0
+  description: >-
+    Single source of truth for the Forge backend. Backend routes, MCP tool
+    schemas, TypeScript SDK, and Rust client are all generated from this file.
+  license:
+    name: AGPL-3.0-only
+servers:
+  - url: https://api.forge.sh
+    description: Production
+  - url: http://localhost:4000
+    description: Local
+security:
+  - bearerAuth: []
+  - apiKeyQuery: []
+tags:
+  - name: projects
+  - name: tasks
+  - name: agents
+  - name: swarms
+  - name: runs
+paths:
+  /v1/projects:
+    get:
+      tags: [projects]
+      operationId: list_projects
+      responses:
+        "200":
+          description: Projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Project" }
+    post:
+      tags: [projects]
+      operationId: create_project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ProjectCreate" }
+      responses:
+        "200": { description: Created, content: { application/json: { schema: { $ref: "#/components/schemas/Project" } } } }
+
+  /v1/projects/{id}/tasks:
+    get:
+      tags: [tasks]
+      operationId: list_tasks
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Task" }
+
+  /v1/tasks:
+    post:
+      tags: [tasks]
+      operationId: create_task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TaskCreate" }
+      responses:
+        "200": { description: Created, content: { application/json: { schema: { $ref: "#/components/schemas/Task" } } } }
+
+  /v1/tasks/{id}:
+    get:
+      tags: [tasks]
+      operationId: get_task
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: Task, content: { application/json: { schema: { $ref: "#/components/schemas/Task" } } } }
+    patch:
+      tags: [tasks]
+      operationId: update_task
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TaskPatch" }
+      responses:
+        "200": { description: Updated, content: { application/json: { schema: { $ref: "#/components/schemas/Task" } } } }
+
+  /v1/projects/{id}/agents:
+    get:
+      tags: [agents]
+      operationId: list_agents
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Agents
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Agent" }
+
+  /v1/agents:
+    post:
+      tags: [agents]
+      operationId: create_agent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AgentCreate" }
+      responses:
+        "200": { description: Created, content: { application/json: { schema: { $ref: "#/components/schemas/Agent" } } } }
+
+  /v1/agents/{id}:
+    get:
+      tags: [agents]
+      operationId: get_agent
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: Agent, content: { application/json: { schema: { $ref: "#/components/schemas/Agent" } } } }
+    patch:
+      tags: [agents]
+      operationId: update_agent
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AgentPatch" }
+      responses:
+        "200": { description: Updated, content: { application/json: { schema: { $ref: "#/components/schemas/Agent" } } } }
+    delete:
+      tags: [agents]
+      operationId: delete_agent
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "204": { description: Deleted }
+
+  /v1/swarms:
+    post:
+      tags: [swarms]
+      operationId: create_swarm
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SwarmCreate" }
+      responses:
+        "200": { description: Created, content: { application/json: { schema: { $ref: "#/components/schemas/Swarm" } } } }
+
+  /v1/swarms/{id}:
+    get:
+      tags: [swarms]
+      operationId: get_swarm
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: Swarm, content: { application/json: { schema: { $ref: "#/components/schemas/Swarm" } } } }
+
+  /v1/swarms/{id}/messages:
+    post:
+      tags: [swarms]
+      operationId: send_message
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MessageCreate" }
+      responses:
+        "200": { description: Sent, content: { application/json: { schema: { $ref: "#/components/schemas/Message" } } } }
+
+  /v1/runs/{id}:
+    get:
+      tags: [runs]
+      operationId: get_run_trace
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: Run trace, content: { application/json: { schema: { $ref: "#/components/schemas/RunTrace" } } } }
+
+  /v1/runs/{id}/replay.sh:
+    get:
+      tags: [runs]
+      operationId: get_run_replay_script
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Standalone reproducer script
+          content:
+            text/x-shellscript:
+              schema: { type: string }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: "forge_live_... API key or JWT bearer token"
+    apiKeyQuery:
+      type: apiKey
+      in: query
+      name: apiKey
+
+  schemas:
+    Project:
+      type: object
+      required: [id, name, createdAt, updatedAt]
+      properties:
+        id:          { type: string, format: uuid }
+        name:        { type: string, maxLength: 255 }
+        description: { type: string, maxLength: 2000 }
+        createdAt:   { type: string, format: date-time }
+        updatedAt:   { type: string, format: date-time }
+
+    ProjectCreate:
+      type: object
+      required: [name]
+      properties:
+        name:        { type: string, maxLength: 255 }
+        description: { type: string, maxLength: 2000 }
+
+    TaskStatus:
+      type: string
+      enum: [todo, in-progress, in-review, complete, cancelled]
+
+    Task:
+      type: object
+      required: [id, projectId, status, instructions]
+      properties:
+        id:             { type: string, format: uuid }
+        projectId:      { type: string, format: uuid }
+        instructions:   { type: string, maxLength: 5000 }
+        taskKnowledge:  { type: string, maxLength: 50000 }
+        status:         { $ref: "#/components/schemas/TaskStatus" }
+        role:           { type: string }
+        runId:          { type: string }
+
+    TaskCreate:
+      type: object
+      required: [projectId, instructions]
+      properties:
+        projectId:     { type: string }
+        instructions:  { type: string, maxLength: 5000 }
+        taskKnowledge: { type: string, maxLength: 50000 }
+        status:        { $ref: "#/components/schemas/TaskStatus" }
+        role:          { type: string }
+
+    TaskPatch:
+      type: object
+      properties:
+        instructions:  { type: string, maxLength: 5000 }
+        taskKnowledge: { type: string, maxLength: 50000 }
+        status:        { $ref: "#/components/schemas/TaskStatus" }
+
+    Agent:
+      type: object
+      required: [id, name, systemPrompt, model, cliBinary]
+      properties:
+        id:           { type: string, format: uuid }
+        projectId:    { type: string, format: uuid }
+        name:         { type: string, maxLength: 255 }
+        systemPrompt: { type: string, maxLength: 100000 }
+        model:        { type: string }
+        cliBinary:    { type: string }
+        cliArgs:      { type: array, items: { type: string } }
+
+    AgentCreate:
+      type: object
+      required: [projectId, name, systemPrompt, model, cliBinary]
+      properties:
+        projectId:    { type: string }
+        name:         { type: string, maxLength: 255 }
+        systemPrompt: { type: string, maxLength: 100000 }
+        model:        { type: string }
+        cliBinary:    { type: string }
+        cliArgs:      { type: array, items: { type: string } }
+
+    AgentPatch:
+      type: object
+      properties:
+        name:         { type: string, maxLength: 255 }
+        systemPrompt: { type: string, maxLength: 100000 }
+        model:        { type: string }
+        cliBinary:    { type: string }
+        cliArgs:      { type: array, items: { type: string } }
+
+    Role:
+      type: object
+      required: [id, name, agentId]
+      properties:
+        id:      { type: string }
+        name:    { type: string }
+        agentId: { type: string }
+        paneId:  { type: string }
+
+    Swarm:
+      type: object
+      required: [id, projectId, goal, status, roles, mailboxId]
+      properties:
+        id:        { type: string, format: uuid }
+        projectId: { type: string, format: uuid }
+        goal:      { type: string, maxLength: 5000 }
+        status:    { type: string, enum: [running, done, failed] }
+        roles:
+          type: array
+          items: { $ref: "#/components/schemas/Role" }
+        mailboxId: { type: string }
+        mailbox:
+          type: array
+          items: { $ref: "#/components/schemas/Message" }
+
+    SwarmCreate:
+      type: object
+      required: [projectId, goal, roles]
+      properties:
+        projectId: { type: string }
+        goal:      { type: string, maxLength: 5000 }
+        roles:
+          type: array
+          items: { $ref: "#/components/schemas/Role" }
+
+    Message:
+      type: object
+      required: [id, swarmId, fromAgentId, body, sig, ts]
+      properties:
+        id:          { type: string, format: uuid }
+        swarmId:     { type: string, format: uuid }
+        fromAgentId: { type: string }
+        toAgentId:   { type: string }
+        body:        { type: string, maxLength: 10000 }
+        sig:         { type: string }
+        ts:          { type: integer, format: int64 }
+
+    MessageCreate:
+      type: object
+      required: [from, body]
+      properties:
+        from: { type: string }
+        to:   { type: string }
+        body: { type: string, maxLength: 10000 }
+
+    RunTraceEvent:
+      oneOf:
+        - type: object
+          required: [type, kind, ts]
+          properties:
+            type: { type: string, enum: [osc133] }
+            kind: { type: string, enum: [prompt_start, prompt_end, command_start, command_finished] }
+            exitCode: { type: integer }
+            ts: { type: integer, format: int64 }
+        - type: object
+          required: [type, provider, model, ts]
+          properties:
+            type: { type: string, enum: [llm] }
+            provider: { type: string }
+            model: { type: string }
+            promptTokens: { type: integer }
+            completionTokens: { type: integer }
+            ts: { type: integer, format: int64 }
+        - type: object
+          required: [type, paneId, bytes, ts]
+          properties:
+            type: { type: string, enum: [pty] }
+            paneId: { type: string }
+            bytes: { type: string, format: byte }
+            ts: { type: integer, format: int64 }
+
+    RunTrace:
+      type: object
+      required: [id, taskId, events]
+      properties:
+        id:     { type: string }
+        taskId: { type: string }
+        events:
+          type: array
+          items: { $ref: "#/components/schemas/RunTraceEvent" }

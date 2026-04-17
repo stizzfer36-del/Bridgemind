@@ -1,0 +1,17 @@
+[package]
+name = "forge-plugin-host"
+version = "0.1.0"
+edition = "2021"
+description = "wasmtime-backed sandbox for Forge skills (U7)."
+license = "MIT"
+
+[lib]
+name = "forge_plugin_host"
+crate-type = ["lib", "cdylib"]
+
+[dependencies]
+wasmtime = "22"
+wasmtime-wasi = "22"
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

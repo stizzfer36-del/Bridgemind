@@ -1,0 +1,18 @@
+[project]
+name = "forge-bench"
+version = "0.1.0"
+description = "Forge benchmark harness — 130 tasks across 6 categories, sandboxed in Docker."
+requires-python = ">=3.12"
+dependencies = [
+  "dspy-ai>=2.4",
+  "docker>=7.1",
+  "httpx>=0.27",
+  "typer>=0.12",
+  "rich>=13.7",
+]
+
+[project.scripts]
+forge-bench = "forge_bench.runner.harness:main"
+
+[tool.setuptools.packages.find]
+where = ["runner"]

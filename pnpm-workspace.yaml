@@ -1,3 +1,4 @@
 packages:
-  - "server"
-  - "mcp"
+  - "apps/*"
+  - "services/*"
+  - "packages/*"

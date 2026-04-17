@@ -1,80 +1,85 @@
-# BridgeSpace
+# Forge
 
-Native desktop app that unifies multi-pane terminals, a code editor, a file
-browser, a Kanban task board, and AI-agent auto-launch so a builder can
-orchestrate 1–16 parallel coding agents against a single codebase from one
-window.
+One monorepo shipping parity with every BridgeMind surface area — ADE, MCP
+server, voice-to-text, multi-provider coding CLI, benchmark platform, and
+a multi-agent swarm — plus an open-core distribution and ten upgrades.
 
 ## Layout
 
 ```
-bridgespace/
-├─ src-tauri/          # Rust / Tauri v2 shell
-├─ src/                # React 19 + TypeScript frontend
-├─ server/             # Fastify + Prisma BridgeMind API
-├─ mcp/                # @modelcontextprotocol/sdk service
-└─ pnpm-workspace.yaml
+forge/
+├─ apps/
+│  ├─ desktop/       # Forge ADE (Tauri v2 + React 19)
+│  ├─ cli/           # forge-code (Bun single-binary)
+│  ├─ voice/         # forge-voice (tray + whisper.cpp sidecar)
+│  ├─ bench/         # forge-bench (Python + Docker sandboxes)
+│  └─ web/           # forge.sh (Next.js marketing + dashboard)
+├─ services/
+│  ├─ api/           # Fastify + Prisma (AGPL)
+│  └─ mcp/           # @modelcontextprotocol/sdk (MIT)
+├─ packages/
+│  ├─ sdk-ts/        # generated from spec/openapi.yaml
+│  ├─ sdk-rust/      # generated from spec/openapi.yaml
+│  ├─ theme-kit/     # theme schema + validator
+│  ├─ plugin-host/   # wasmtime skills sandbox (U7)
+│  └─ replay-player/ # deterministic replay (U5)
+├─ spec/openapi.yaml # single source of truth (U8)
+├─ infra/            # docker-compose, Dockerfiles, migrations
+└─ .github/workflows # CI + release matrix (macOS/Windows/Linux)
 ```
 
-## Prereqs
+## Upgrades over BridgeMind
 
-- Rust 1.78+
-- Node 20 LTS
-- pnpm 9
-- PostgreSQL 16 + Redis 7 (server only)
+| id | Upgrade                                                          |
+|----|------------------------------------------------------------------|
+| U1 | Open-core: MIT on apps/* + services/mcp, AGPL on services/api    |
+| U2 | Single hostname — everything under forge.sh                      |
+| U3 | Real free tier — local-only, zero-account mode                   |
+| U4 | Reverse MCP — agents drive the IDE (open_file, split_pane, …)    |
+| U5 | Deterministic replay — JSONL trace, replay.sh reproducer         |
+| U6 | Binary PTY protocol — length-prefixed protobuf, 3-5× throughput  |
+| U7 | WASM plugin runtime — wasmtime-sandboxed skills                  |
+| U8 | Schema-first — OpenAPI 3.1 drives SDK + MCP + backend            |
+| U9 | Local models first-class — Ollama/vLLM in agent picker           |
+| U10| Auditable swarm mailbox — HMAC-signed messages, UI tab           |
 
-## Dev
+## Quick start
 
 ```bash
 pnpm install
-pnpm tauri:dev          # desktop app + vite
-pnpm --filter @bridgespace/server prisma:generate
-pnpm --filter @bridgespace/server dev         # :4000
-pnpm --filter @bridgespace/mcp dev            # :4100
+docker compose -f infra/docker-compose.yml up -d   # postgres, redis, api, mcp
+pnpm --filter @forge/api prisma:generate
+pnpm desktop:dev
 ```
 
 ## Build matrix
 
-```bash
-pnpm tauri build --target universal-apple-darwin
-pnpm tauri build --target x86_64-pc-windows-msvc
-pnpm tauri build --target x86_64-unknown-linux-gnu
-```
-
-## Environment
-
-See `.env.example` for the full list. Key vars:
-- `BRIDGEMIND_API_URL` — default `https://api.bridgemind.ai`
-- `BRIDGEMIND_API_KEY` — `bm_live_…`
-- `OAUTH_CLIENT_ID`, `OAUTH_REDIRECT_URI` — OAuth PKCE via deep-link
-- `DATABASE_URL`, `REDIS_URL`, `SESSION_SECRET` — server only
+Release workflow at `.github/workflows/release.yml` runs tauri-action on
+macos-14, windows-2022, ubuntu-22.04 → DMG/MSI/DEB/RPM/AppImage → GitHub
+Release + `latest.json` for the updater.
 
 ## Keyboard shortcuts
 
-| Key             | Action          |
+| Chord           | Action          |
 |-----------------|-----------------|
-| Cmd/Ctrl+T      | New tab         |
-| Cmd/Ctrl+W      | Close tab       |
-| Cmd/Ctrl+P      | Quick Open      |
-| Cmd/Ctrl+F      | Search in pane  |
-| Cmd/Ctrl+D      | Split pane      |
-| Cmd/Ctrl+K      | Cycle theme     |
-| Cmd/Ctrl+1..9   | Jump to tab     |
+| ⌘T / ⌘W         | New / close tab |
+| ⌘P / ⌘F         | Quick open / search |
+| ⌘D              | Split pane      |
+| ⌘K              | Cycle theme     |
+| ⌘R              | Run focused card |
+| ⌘1–5            | Sidebar tab     |
+| ⌘6–9            | Tab by index    |
+| ⌘⇧M             | Mailbox         |
+| ⌘⇧A             | Agents          |
 
-## Themes
+## CLI shim
 
-Ship 25 themes in `src/themes/*.json`:
-Void, Ghost, Plasma, Carbon, Hex, Neon Tokyo, Obsidian, Nebula, Storm,
-Infrared, Nova, Stealth, Hologram, Dracula, BridgeMind, Synthwave,
-Cybernetics, Quantum, Mecha, Abyss, Paper, Chalk, Solar, Arctic, Ivory.
+Install `forge` via `brew install forge` / `scoop install forge` /
+`apt-get install forge`. `forge .` opens the ADE to the current working
+directory.
 
-## OSC 133 shell integration
+## Licensing
 
-BridgeSpace parses `ESC ] 133 ; {A|B|C|D} ; … ST` sequences to render
-collapsible command blocks. Add this to your shell rc to opt in:
-
-```zsh
-# zsh
-precmd() { print -Pn "\e]133;A\e\\" }
-preexec() { print -Pn "\e]133;C\e\\" }
-```
+See `LICENSE`. TL;DR: apps and client-side tooling are MIT; the hosted
+backend is AGPL — buy a commercial license if you don't want copyleft to
+apply to your network service.

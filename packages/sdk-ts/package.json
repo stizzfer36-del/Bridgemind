@@ -1,0 +1,16 @@
+{
+  "name": "@forge/sdk-ts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "TypeScript SDK generated from spec/openapi.yaml.",
+  "main": "generated/index.ts",
+  "types": "generated/index.ts",
+  "scripts": {
+    "generate": "openapi-generator-cli generate -i ../../spec/openapi.yaml -g typescript-fetch -o generated"
+  },
+  "devDependencies": {
+    "@openapitools/openapi-generator-cli": "^2.13.0",
+    "typescript": "^5.4.0"
+  }
+}
