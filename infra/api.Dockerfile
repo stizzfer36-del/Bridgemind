@@ -16,4 +16,11 @@ RUN pnpm --filter @forge/api build
 FROM node:20-alpine AS run
 WORKDIR /app
 COPY --from=build /repo/services/api /app
+
+HEALTHCHECK --interval=10s --timeout=5s --retries=3 \
+  CMD wget -qO- http://localhost:4000/health || exit 1
+
+RUN addgroup --system --gid 1001 forge && adduser --system --uid 1001 --ingroup forge forge
+USER forge
+
 CMD ["node", "dist/index.js"]

@@ -17,6 +17,8 @@ export class ForgeClient {
     return (await res.json()) as T;
   }
 
+  private get = <T>(path: string) => this.req<T>(path);
+
   listProjects = () => this.req<unknown[]>("/v1/projects");
   createProject = (body: unknown) =>
     this.req("/v1/projects", { method: "POST", body: JSON.stringify(body) });
@@ -46,4 +48,8 @@ export class ForgeClient {
     this.req(`/v1/swarms/${id}/messages`, { method: "POST", body: JSON.stringify(body) });
 
   getRunTrace = (id: string) => this.req(`/v1/runs/${id}`);
+
+  async getBenchLeaderboard() {
+    return this.get("/v1/bench/leaderboard");
+  }
 }

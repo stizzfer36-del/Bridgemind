@@ -30,12 +30,17 @@ services:
       DATABASE_URL: postgres://forge:forge@postgres:5432/forge
       REDIS_URL: redis://redis:6379
       JWT_SECRET: dev-jwt-secret
-      MAILBOX_SECRET: dev-mailbox-secret
+      MAILBOX_SECRET: ${MAILBOX_SECRET:-changeme-in-production}
       PORT: "4000"
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
     ports: ["4000:4000"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   mcp:
     build:
@@ -46,6 +51,19 @@ services:
       PORT: "4100"
     depends_on: [api]
     ports: ["4100:4100"]
+
+  bench:
+    build:
+      context: ..
+      dockerfile: apps/bench/runner/docker/sandbox.Dockerfile
+    volumes:
+      - ./migrations:/migrations:ro
+    environment:
+      - FORGE_API_URL=http://api:4000
+    depends_on:
+      api:
+        condition: service_healthy
+    profiles: [bench]
 
 volumes:
   pgdata: {}
