@@ -44,20 +44,21 @@ function buildServer(apiKey: string): McpServer {
   for (const [name, def] of Object.entries(dataTools)) {
     server.registerTool(
       name,
-      { description: def.description, inputSchema: def.input.shape as never },
-      async (args: unknown) => {
+      { description: def.description, inputSchema: def.input.shape as any },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (async (args: unknown) => {
         try {
           const result = await def.run(client)(args as never);
           return {
-            content: [{ type: "text", text: JSON.stringify(result ?? null, null, 2) }],
+            content: [{ type: "text" as const, text: JSON.stringify(result ?? null, null, 2) }],
           };
         } catch (err) {
           return {
-            content: [{ type: "text", text: "Error: " + (err as Error).message }],
+            content: [{ type: "text" as const, text: "Error: " + (err as Error).message }],
             isError: true,
           };
         }
-      }
+      }) as any
     );
   }
 
@@ -65,20 +66,21 @@ function buildServer(apiKey: string): McpServer {
   for (const [name, def] of Object.entries(uiTools)) {
     server.registerTool(
       name,
-      { description: def.description, inputSchema: def.input.shape as never },
-      async (args: unknown) => {
+      { description: def.description, inputSchema: def.input.shape as any },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (async (args: unknown) => {
         try {
           const result = await forwardToUi(apiKey, name, args);
           return {
-            content: [{ type: "text", text: JSON.stringify(result ?? null, null, 2) }],
+            content: [{ type: "text" as const, text: JSON.stringify(result ?? null, null, 2) }],
           };
         } catch (err) {
           return {
-            content: [{ type: "text", text: "Error: " + (err as Error).message }],
+            content: [{ type: "text" as const, text: "Error: " + (err as Error).message }],
             isError: true,
           };
         }
-      }
+      }) as any
     );
   }
 

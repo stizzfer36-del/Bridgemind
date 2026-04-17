@@ -4,7 +4,7 @@ let store: Store | null = null;
 
 async function getStore(): Promise<Store> {
   if (store) return store;
-  store = await load("bridgespace.store.json", { autoSave: true });
+  store = await load("bridgespace.store.json", { defaults: {}, autoSave: true });
   return store;
 }
 
