@@ -1,0 +1,14 @@
+{
+  "name": "Quantum",
+  "bg": "#0d1b2a",
+  "fg": "#e0e1dd",
+  "accent": "#415a77",
+  "border": "#1b263b",
+  "ansi": {
+    "black": "#0d1b2a", "red": "#e63946", "green": "#57cc99", "yellow": "#f9c74f",
+    "blue": "#457b9d", "magenta": "#9d4edd", "cyan": "#76c7c0", "white": "#e0e1dd",
+    "brightBlack": "#415a77", "brightRed": "#f07167", "brightGreen": "#8ae1b6", "brightYellow": "#fcd572",
+    "brightBlue": "#5e9bbd", "brightMagenta": "#b378e8", "brightCyan": "#a6dbd4", "brightWhite": "#ffffff"
+  },
+  "syntax": { "keyword": "#9d4edd", "string": "#57cc99", "number": "#f9c74f", "comment": "#415a77", "function": "#457b9d", "type": "#76c7c0" }
+}

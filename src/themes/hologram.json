@@ -1,0 +1,14 @@
+{
+  "name": "Hologram",
+  "bg": "#001219",
+  "fg": "#94d2bd",
+  "accent": "#0a9396",
+  "border": "#003844",
+  "ansi": {
+    "black": "#001219", "red": "#ae2012", "green": "#0a9396", "yellow": "#e9d8a6",
+    "blue": "#005f73", "magenta": "#9d4edd", "cyan": "#94d2bd", "white": "#e9d8a6",
+    "brightBlack": "#4f6367", "brightRed": "#bb3e03", "brightGreen": "#94d2bd", "brightYellow": "#ca6702",
+    "brightBlue": "#0a9396", "brightMagenta": "#ae47c0", "brightCyan": "#88d8c0", "brightWhite": "#f0ead2"
+  },
+  "syntax": { "keyword": "#9d4edd", "string": "#94d2bd", "number": "#ee9b00", "comment": "#4f6367", "function": "#0a9396", "type": "#e9d8a6" }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "Arctic",
+  "bg": "#2e3440",
+  "fg": "#d8dee9",
+  "accent": "#88c0d0",
+  "border": "#3b4252",
+  "ansi": {
+    "black": "#2e3440", "red": "#bf616a", "green": "#a3be8c", "yellow": "#ebcb8b",
+    "blue": "#81a1c1", "magenta": "#b48ead", "cyan": "#88c0d0", "white": "#e5e9f0",
+    "brightBlack": "#4c566a", "brightRed": "#bf616a", "brightGreen": "#a3be8c", "brightYellow": "#ebcb8b",
+    "brightBlue": "#81a1c1", "brightMagenta": "#b48ead", "brightCyan": "#8fbcbb", "brightWhite": "#eceff4"
+  },
+  "syntax": { "keyword": "#81a1c1", "string": "#a3be8c", "number": "#b48ead", "comment": "#4c566a", "function": "#88c0d0", "type": "#ebcb8b" }
+}

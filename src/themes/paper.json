@@ -1,0 +1,14 @@
+{
+  "name": "Paper",
+  "bg": "#f8f5ec",
+  "fg": "#2b2b2b",
+  "accent": "#d94e64",
+  "border": "#e2dfd4",
+  "ansi": {
+    "black": "#2b2b2b", "red": "#d94e64", "green": "#587539", "yellow": "#b6893a",
+    "blue": "#3170a8", "magenta": "#8d3ba3", "cyan": "#2d8876", "white": "#2b2b2b",
+    "brightBlack": "#6f6f6f", "brightRed": "#cc3333", "brightGreen": "#4a8e2a", "brightYellow": "#a87300",
+    "brightBlue": "#2060a0", "brightMagenta": "#772b99", "brightCyan": "#287466", "brightWhite": "#121212"
+  },
+  "syntax": { "keyword": "#8d3ba3", "string": "#587539", "number": "#b6893a", "comment": "#9a9a9a", "function": "#3170a8", "type": "#2d8876" }
+}

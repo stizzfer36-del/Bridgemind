@@ -1,0 +1,14 @@
+{
+  "name": "Ivory",
+  "bg": "#faf8f2",
+  "fg": "#3a3a3a",
+  "accent": "#9c6b30",
+  "border": "#e8e3d3",
+  "ansi": {
+    "black": "#3a3a3a", "red": "#b45342", "green": "#637a3c", "yellow": "#a67a22",
+    "blue": "#3a6ea5", "magenta": "#8c4a82", "cyan": "#3e8a8a", "white": "#3a3a3a",
+    "brightBlack": "#7a7a7a", "brightRed": "#cf5f4a", "brightGreen": "#7b9246", "brightYellow": "#c49030",
+    "brightBlue": "#4f82bf", "brightMagenta": "#a56297", "brightCyan": "#4fa5a5", "brightWhite": "#1a1a1a"
+  },
+  "syntax": { "keyword": "#8c4a82", "string": "#637a3c", "number": "#a67a22", "comment": "#a0a0a0", "function": "#3a6ea5", "type": "#3e8a8a" }
+}

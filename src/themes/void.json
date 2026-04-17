@@ -1,0 +1,33 @@
+{
+  "name": "Void",
+  "bg": "#000000",
+  "fg": "#e6e6e6",
+  "accent": "#9d7cd8",
+  "border": "#111111",
+  "ansi": {
+    "black": "#000000",
+    "red": "#e06c75",
+    "green": "#98c379",
+    "yellow": "#e5c07b",
+    "blue": "#61afef",
+    "magenta": "#c678dd",
+    "cyan": "#56b6c2",
+    "white": "#abb2bf",
+    "brightBlack": "#5c6370",
+    "brightRed": "#e06c75",
+    "brightGreen": "#98c379",
+    "brightYellow": "#e5c07b",
+    "brightBlue": "#61afef",
+    "brightMagenta": "#c678dd",
+    "brightCyan": "#56b6c2",
+    "brightWhite": "#ffffff"
+  },
+  "syntax": {
+    "keyword": "#c678dd",
+    "string": "#98c379",
+    "number": "#d19a66",
+    "comment": "#5c6370",
+    "function": "#61afef",
+    "type": "#e5c07b"
+  }
+}

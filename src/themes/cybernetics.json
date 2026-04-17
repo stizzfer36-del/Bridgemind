@@ -1,0 +1,14 @@
+{
+  "name": "Cybernetics",
+  "bg": "#0f0f1e",
+  "fg": "#c8d1f0",
+  "accent": "#00ffcc",
+  "border": "#1a1a32",
+  "ansi": {
+    "black": "#0f0f1e", "red": "#ff3366", "green": "#00ffcc", "yellow": "#ffcc00",
+    "blue": "#3399ff", "magenta": "#cc33ff", "cyan": "#00ffff", "white": "#c8d1f0",
+    "brightBlack": "#3a3a55", "brightRed": "#ff5588", "brightGreen": "#33ffdd", "brightYellow": "#ffdd33",
+    "brightBlue": "#66bbff", "brightMagenta": "#dd66ff", "brightCyan": "#66ffff", "brightWhite": "#ffffff"
+  },
+  "syntax": { "keyword": "#cc33ff", "string": "#00ffcc", "number": "#ffcc00", "comment": "#3a3a55", "function": "#3399ff", "type": "#00ffff" }
+}

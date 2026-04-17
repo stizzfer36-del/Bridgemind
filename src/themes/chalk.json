@@ -1,0 +1,14 @@
+{
+  "name": "Chalk",
+  "bg": "#f4f4f4",
+  "fg": "#2e2e2e",
+  "accent": "#0070c0",
+  "border": "#dddddd",
+  "ansi": {
+    "black": "#2e2e2e", "red": "#c82829", "green": "#718c00", "yellow": "#eab700",
+    "blue": "#4271ae", "magenta": "#8959a8", "cyan": "#3e999f", "white": "#2e2e2e",
+    "brightBlack": "#757575", "brightRed": "#c82829", "brightGreen": "#718c00", "brightYellow": "#eab700",
+    "brightBlue": "#4271ae", "brightMagenta": "#8959a8", "brightCyan": "#3e999f", "brightWhite": "#1a1a1a"
+  },
+  "syntax": { "keyword": "#8959a8", "string": "#718c00", "number": "#f5871f", "comment": "#a0a0a0", "function": "#4271ae", "type": "#3e999f" }
+}

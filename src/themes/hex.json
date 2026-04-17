@@ -1,0 +1,14 @@
+{
+  "name": "Hex",
+  "bg": "#0f111a",
+  "fg": "#b4c2d4",
+  "accent": "#82aaff",
+  "border": "#1b1e2b",
+  "ansi": {
+    "black": "#0f111a", "red": "#f07178", "green": "#c3e88d", "yellow": "#ffcb6b",
+    "blue": "#82aaff", "magenta": "#c792ea", "cyan": "#89ddff", "white": "#cfd8dc",
+    "brightBlack": "#464b5d", "brightRed": "#ff7777", "brightGreen": "#d6f592", "brightYellow": "#ffe080",
+    "brightBlue": "#9cc4ff", "brightMagenta": "#d8a8f5", "brightCyan": "#a0e8ff", "brightWhite": "#ffffff"
+  },
+  "syntax": { "keyword": "#c792ea", "string": "#c3e88d", "number": "#f78c6c", "comment": "#464b5d", "function": "#82aaff", "type": "#ffcb6b" }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "Abyss",
+  "bg": "#000c18",
+  "fg": "#9ab3c7",
+  "accent": "#22aaff",
+  "border": "#001833",
+  "ansi": {
+    "black": "#000c18", "red": "#9b2e2e", "green": "#00a883", "yellow": "#f3d100",
+    "blue": "#225fa6", "magenta": "#8046f1", "cyan": "#64b5cd", "white": "#9ab3c7",
+    "brightBlack": "#3d4a59", "brightRed": "#e65555", "brightGreen": "#22cc99", "brightYellow": "#ffec3d",
+    "brightBlue": "#4a90e2", "brightMagenta": "#a37bf5", "brightCyan": "#79c7db", "brightWhite": "#ffffff"
+  },
+  "syntax": { "keyword": "#8046f1", "string": "#00a883", "number": "#f3d100", "comment": "#3d4a59", "function": "#225fa6", "type": "#22aaff" }
+}

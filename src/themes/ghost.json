@@ -1,0 +1,14 @@
+{
+  "name": "Ghost",
+  "bg": "#0a0a0d",
+  "fg": "#dcdcdc",
+  "accent": "#8abeb7",
+  "border": "#161619",
+  "ansi": {
+    "black": "#0a0a0d", "red": "#cc6666", "green": "#b5bd68", "yellow": "#f0c674",
+    "blue": "#81a2be", "magenta": "#b294bb", "cyan": "#8abeb7", "white": "#c5c8c6",
+    "brightBlack": "#5c5f66", "brightRed": "#d54e53", "brightGreen": "#b9ca4a", "brightYellow": "#e7c547",
+    "brightBlue": "#7aa6da", "brightMagenta": "#c397d8", "brightCyan": "#70c0b1", "brightWhite": "#eaeaea"
+  },
+  "syntax": { "keyword": "#b294bb", "string": "#b5bd68", "number": "#de935f", "comment": "#5c5f66", "function": "#81a2be", "type": "#f0c674" }
+}

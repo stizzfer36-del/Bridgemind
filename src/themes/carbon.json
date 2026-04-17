@@ -1,0 +1,14 @@
+{
+  "name": "Carbon",
+  "bg": "#161616",
+  "fg": "#f4f4f4",
+  "accent": "#78a9ff",
+  "border": "#262626",
+  "ansi": {
+    "black": "#161616", "red": "#ee5396", "green": "#42be65", "yellow": "#f1c21b",
+    "blue": "#78a9ff", "magenta": "#be95ff", "cyan": "#33b1ff", "white": "#f4f4f4",
+    "brightBlack": "#525252", "brightRed": "#ff7eb6", "brightGreen": "#3ddbd9", "brightYellow": "#ffe97b",
+    "brightBlue": "#8cb6ff", "brightMagenta": "#d4bbff", "brightCyan": "#82cfff", "brightWhite": "#ffffff"
+  },
+  "syntax": { "keyword": "#be95ff", "string": "#42be65", "number": "#f1c21b", "comment": "#6f6f6f", "function": "#78a9ff", "type": "#33b1ff" }
+}

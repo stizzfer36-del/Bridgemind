@@ -1,0 +1,14 @@
+{
+  "name": "Storm",
+  "bg": "#232634",
+  "fg": "#c6d0f5",
+  "accent": "#8caaee",
+  "border": "#2f3246",
+  "ansi": {
+    "black": "#51576d", "red": "#e78284", "green": "#a6d189", "yellow": "#e5c890",
+    "blue": "#8caaee", "magenta": "#ca9ee6", "cyan": "#81c8be", "white": "#b5bfe2",
+    "brightBlack": "#626880", "brightRed": "#e78284", "brightGreen": "#a6d189", "brightYellow": "#e5c890",
+    "brightBlue": "#8caaee", "brightMagenta": "#ca9ee6", "brightCyan": "#81c8be", "brightWhite": "#a5adce"
+  },
+  "syntax": { "keyword": "#ca9ee6", "string": "#a6d189", "number": "#ef9f76", "comment": "#737994", "function": "#8caaee", "type": "#e5c890" }
+}

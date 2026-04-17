@@ -1,0 +1,14 @@
+{
+  "name": "Neon Tokyo",
+  "bg": "#1a1b26",
+  "fg": "#c0caf5",
+  "accent": "#7aa2f7",
+  "border": "#24283b",
+  "ansi": {
+    "black": "#15161e", "red": "#f7768e", "green": "#9ece6a", "yellow": "#e0af68",
+    "blue": "#7aa2f7", "magenta": "#bb9af7", "cyan": "#7dcfff", "white": "#a9b1d6",
+    "brightBlack": "#414868", "brightRed": "#ff7a93", "brightGreen": "#b9f27c", "brightYellow": "#ff9e64",
+    "brightBlue": "#7da6ff", "brightMagenta": "#bb9af7", "brightCyan": "#0db9d7", "brightWhite": "#c0caf5"
+  },
+  "syntax": { "keyword": "#bb9af7", "string": "#9ece6a", "number": "#ff9e64", "comment": "#565f89", "function": "#7aa2f7", "type": "#2ac3de" }
+}

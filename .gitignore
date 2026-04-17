@@ -1,0 +1,35 @@
+# deps
+node_modules/
+.pnpm-store/
+
+# build
+dist/
+build/
+*.tsbuildinfo
+
+# rust / tauri
+src-tauri/target/
+src-tauri/Cargo.lock
+src-tauri/gen/
+
+# editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# os
+.DS_Store
+Thumbs.db
+
+# logs
+*.log
+.npm/
+.pnpm-debug.log*
+
+# env
+.env
+.env.local
+.env.*.local
+
+# prisma
+server/prisma/migrations/dev.db*

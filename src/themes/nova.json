@@ -1,0 +1,14 @@
+{
+  "name": "Nova",
+  "bg": "#3c4c55",
+  "fg": "#c5d4dd",
+  "accent": "#7fc1ca",
+  "border": "#4a5a64",
+  "ansi": {
+    "black": "#3c4c55", "red": "#df8c8c", "green": "#a8ce93", "yellow": "#dada93",
+    "blue": "#83afe5", "magenta": "#9a93e1", "cyan": "#7fc1ca", "white": "#c5d4dd",
+    "brightBlack": "#6a7985", "brightRed": "#df8c8c", "brightGreen": "#a8ce93", "brightYellow": "#dada93",
+    "brightBlue": "#83afe5", "brightMagenta": "#9a93e1", "brightCyan": "#7fc1ca", "brightWhite": "#e6eef3"
+  },
+  "syntax": { "keyword": "#9a93e1", "string": "#a8ce93", "number": "#f2c38f", "comment": "#6a7985", "function": "#83afe5", "type": "#7fc1ca" }
+}

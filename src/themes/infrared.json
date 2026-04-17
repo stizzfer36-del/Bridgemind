@@ -1,0 +1,14 @@
+{
+  "name": "Infrared",
+  "bg": "#150505",
+  "fg": "#ffdede",
+  "accent": "#ff3333",
+  "border": "#2a0a0a",
+  "ansi": {
+    "black": "#150505", "red": "#ff3333", "green": "#ff9966", "yellow": "#ffcc00",
+    "blue": "#ff6666", "magenta": "#ff4466", "cyan": "#ff8888", "white": "#ffdede",
+    "brightBlack": "#663333", "brightRed": "#ff5555", "brightGreen": "#ffaa77", "brightYellow": "#ffdd33",
+    "brightBlue": "#ff7777", "brightMagenta": "#ff5577", "brightCyan": "#ff9999", "brightWhite": "#ffeeee"
+  },
+  "syntax": { "keyword": "#ff4466", "string": "#ffcc00", "number": "#ff9966", "comment": "#663333", "function": "#ff6666", "type": "#ff8888" }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "Mecha",
+  "bg": "#1c1f26",
+  "fg": "#d9d9d9",
+  "accent": "#ff6b35",
+  "border": "#2d313a",
+  "ansi": {
+    "black": "#1c1f26", "red": "#ff6b35", "green": "#a7c957", "yellow": "#ffb400",
+    "blue": "#4cc9f0", "magenta": "#f72585", "cyan": "#4361ee", "white": "#d9d9d9",
+    "brightBlack": "#4a4e59", "brightRed": "#ff8a5b", "brightGreen": "#c3d982", "brightYellow": "#ffc933",
+    "brightBlue": "#7dd7f5", "brightMagenta": "#ff5a9e", "brightCyan": "#6a7aff", "brightWhite": "#ffffff"
+  },
+  "syntax": { "keyword": "#f72585", "string": "#a7c957", "number": "#ffb400", "comment": "#4a4e59", "function": "#4cc9f0", "type": "#ff6b35" }
+}

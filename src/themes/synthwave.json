@@ -1,0 +1,14 @@
+{
+  "name": "Synthwave",
+  "bg": "#241b2f",
+  "fg": "#ffefff",
+  "accent": "#ff7edb",
+  "border": "#362a44",
+  "ansi": {
+    "black": "#241b2f", "red": "#fe4450", "green": "#72f1b8", "yellow": "#f3e600",
+    "blue": "#36f9f6", "magenta": "#ff7edb", "cyan": "#36f9f6", "white": "#ffefff",
+    "brightBlack": "#495495", "brightRed": "#fe4450", "brightGreen": "#72f1b8", "brightYellow": "#fede5d",
+    "brightBlue": "#36f9f6", "brightMagenta": "#ff7edb", "brightCyan": "#36f9f6", "brightWhite": "#ffffff"
+  },
+  "syntax": { "keyword": "#fede5d", "string": "#ff8b39", "number": "#f97e72", "comment": "#495495", "function": "#36f9f6", "type": "#ff7edb" }
+}
