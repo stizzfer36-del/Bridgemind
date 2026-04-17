@@ -43,7 +43,7 @@ async function getToken(): Promise<string> {
 export async function plan(
   providers: Record<string, Provider>,
   goal: string,
-  flags: Record<string, string | boolean> & { positional: string[] } = { positional: [] }
+  flags: { positional: string[]; [key: string]: string | boolean | string[] } = { positional: [] as string[] }
 ): Promise<void> {
   const model = (flags.model as string | undefined) ?? "claude-opus-4-7";
   const provider = providers[defaultProvider(providers)] ?? Object.values(providers)[0];

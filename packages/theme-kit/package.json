@@ -10,12 +10,14 @@
     "forge-validate-themes": "src/validate.ts"
   },
   "scripts": {
-    "validate": "node --import tsx/esm src/validate.ts"
+    "validate": "node --import tsx/esm src/validate.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "zod": "^3.23.0"
   },
   "devDependencies": {
+    "@types/node": "^20.12.0",
     "tsx": "^4.15.0",
     "typescript": "^5.4.0"
   }

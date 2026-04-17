@@ -8,6 +8,7 @@
     "build": "turbo run build",
     "test": "turbo run test",
     "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
     "desktop:dev": "pnpm --filter @forge/desktop tauri:dev",
     "desktop:build": "pnpm --filter @forge/desktop tauri:build",
     "api:dev": "pnpm --filter @forge/api dev",

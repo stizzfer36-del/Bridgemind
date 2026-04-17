@@ -193,8 +193,8 @@ async function main() {
   }
 }
 
-function parseFlags(args: string[]): Record<string, string | boolean> & { positional: string[] } {
-  const result: Record<string, string | boolean> & { positional: string[] } = { positional: [] };
+function parseFlags(args: string[]): { positional: string[]; [key: string]: string | boolean | string[] } {
+  const result: { positional: string[]; [key: string]: string | boolean | string[] } = { positional: [] as string[] };
   for (let i = 0; i < args.length; i++) {
     const a = args[i];
     if (a.startsWith("--")) {
